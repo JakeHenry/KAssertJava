@@ -2,21 +2,10 @@
   "java.import.maven.enabled": true,
   "java.configuration.updateBuildConfiguration": "automatic",
   "maven.executable.preferMavenWrapper": true,
-  "java.configuration.runtimes": [
-    {
-      "name": "JavaSE-1.8",
-      "path": "C:\\Program Files\\Java\\jdk1.8.0_291",
-      "default": true
-    },
-    {
-      "name": "JavaSE-1.6",
-      "path": "C:\\Program Files\\Java\\jdk1.8.0_291"
-    }
-  ],
   "files.exclude": {
     "**/target": true
   },
-  "java.jdt.ls.java.home": "C:\\Program Files\\Java\\jdk1.8.0_291",
+  "java.jdt.ls.java.home": "C:/Program Files/Java/jdk8u492-b09",
   "java.format.settings.url": ".vscode/java-formatter.xml",
   "[java]": {
     "editor.detectIndentation": false

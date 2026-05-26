@@ -21,8 +21,9 @@ public interface KAssertImplementation
      * @param condition the condition to evaluate
      * @param message the failure message
      * @return {@code true} when the condition is false
+     * @throws IllegalStateException when the requirement fails
      */
-    boolean kRefuse(boolean condition, String message);
+    boolean kRefuse(boolean condition, String message) throws IllegalStateException;
 
     /**
      * Requires {@code expected} and {@code actual} to be equal.

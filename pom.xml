@@ -14,8 +14,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.6</maven.compiler.source>
-        <maven.compiler.target>1.6</maven.compiler.target>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
         <junit.version>4.13.2</junit.version>
     </properties>
 
@@ -27,4 +27,21 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <!-- <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.1</version>
+                <configuration>
+                    <fork>true</fork>
+                    <executable>${env.JAVA6_HOME}/bin/javac</executable>
+                    <compilerArguments>
+                        <bootclasspath>${env.JAVA6_HOME}/jre/lib/rt.jar${path.separator}${env.JAVA6_HOME}/jre/lib/jsse.jar${path.separator}${env.JAVA6_HOME}/jre/lib/jce.jar</bootclasspath>
+                    </compilerArguments>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build> -->
 </project>
