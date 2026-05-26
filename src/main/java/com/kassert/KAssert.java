@@ -1,7 +1,9 @@
 package com.kassert;
 
+import com.kassert.ex.KResult;
+
 /**
- * Facade entry point for KAssert require/assert operations.
+ * Facade entry point for KAssert require operations.
  */
 public final class KAssert
 {
@@ -22,11 +24,11 @@ public final class KAssert
      *
      * @param condition the condition to evaluate
      * @param message the failure message
-     * @throws IllegalStateException when the requirement fails
+     * @return the result of the requirement
      */
-    public static void kRequire(final boolean condition, final String message) throws IllegalStateException
+    public static KResult<Boolean> kRequire(final boolean condition, final String message)
     {
-        implementation.kRequire(condition, message);
+        return implementation.kRequire(condition, message);
     }
 
     /**
@@ -34,9 +36,9 @@ public final class KAssert
      *
      * @param condition the condition to evaluate
      * @param message the failure message
-     * @return {@code true} when the condition is false
+     * @return the result of the requirement
      */
-    public static boolean kRefuse(final boolean condition, final String message)
+    public static KResult<Boolean> kRefuse(final boolean condition, final String message)
     {
         return implementation.kRefuse(condition, message);
     }
@@ -48,11 +50,9 @@ public final class KAssert
      * @param expected the expected value
      * @param actual the actual value
      * @param message the failure message
-     * @return the validated value
-     * @throws IllegalStateException when the requirement fails
+     * @return the result of the requirement
      */
-    public static <T> T kRequireEquals(final T expected, final Object actual, final String message)
-            throws IllegalStateException
+    public static <T> KResult<T> kRequireEquals(final T expected, final Object actual, final String message)
     {
         return implementation.kRequireEquals(expected, actual, message);
     }
@@ -64,11 +64,9 @@ public final class KAssert
      * @param notExpected the disallowed value
      * @param actual the actual value
      * @param message the failure message
-     * @return the validated value
-     * @throws IllegalStateException when the requirement fails
+     * @return the result of the requirement
      */
-    public static <T> T kRequireNotEquals(final T notExpected, final Object actual, final String message)
-            throws IllegalStateException
+    public static <T> KResult<T> kRequireNotEquals(final T notExpected, final Object actual, final String message)
     {
         return implementation.kRequireNotEquals(notExpected, actual, message);
     }
@@ -80,11 +78,9 @@ public final class KAssert
      * @param expected the expected reference
      * @param actual the actual reference
      * @param message the failure message
-     * @return the validated value
-     * @throws IllegalStateException when the requirement fails
+     * @return the result of the requirement
      */
-    public static <T> T kRequireSame(final T expected, final Object actual, final String message)
-            throws IllegalStateException
+    public static <T> KResult<T> kRequireSame(final T expected, final Object actual, final String message)
     {
         return implementation.kRequireSame(expected, actual, message);
     }
@@ -96,11 +92,9 @@ public final class KAssert
      * @param notExpected the disallowed reference
      * @param actual the actual reference
      * @param message the failure message
-     * @return the validated value
-     * @throws IllegalStateException when the requirement fails
+     * @return the result of the requirement
      */
-    public static <T> T kRequireNotSame(final T notExpected, final Object actual, final String message)
-            throws IllegalStateException
+    public static <T> KResult<T> kRequireNotSame(final T notExpected, final Object actual, final String message)
     {
         return implementation.kRequireNotSame(notExpected, actual, message);
     }
@@ -111,10 +105,9 @@ public final class KAssert
      * @param <T> the object type
      * @param object the value to validate
      * @param message the failure message
-     * @return the validated value
-     * @throws IllegalStateException when the requirement fails
+     * @return the result of the requirement
      */
-    public static <T> T kRequireNull(final T object, final String message) throws IllegalStateException
+    public static <T> KResult<T> kRequireNull(final T object, final String message)
     {
         return implementation.kRequireNull(object, message);
     }
@@ -125,10 +118,9 @@ public final class KAssert
      * @param <T> the object type
      * @param value the value to validate
      * @param message the failure message
-     * @return the validated value
-     * @throws IllegalStateException when the requirement fails
+     * @return the result of the requirement
      */
-    public static <T> T kRequireNotNull(final T value, final String message) throws IllegalStateException
+    public static <T> KResult<T> kRequireNotNull(final T value, final String message)
     {
         return implementation.kRequireNotNull(value, message);
     }
@@ -140,11 +132,9 @@ public final class KAssert
      * @param expectedType the required runtime type
      * @param object the value to validate
      * @param message the failure message
-     * @return the validated value
-     * @throws IllegalStateException when the requirement fails
+     * @return the result of the requirement
      */
-    public static <T> T kRequireInstanceOf(final Class<?> expectedType, final T object, final String message)
-            throws IllegalStateException
+    public static <T> KResult<T> kRequireInstanceOf(final Class<?> expectedType, final T object, final String message)
     {
         return implementation.kRequireInstanceOf(expectedType, object, message);
     }
@@ -156,139 +146,11 @@ public final class KAssert
      * @param illegalType the disallowed runtime type
      * @param object the value to validate
      * @param message the failure message
-     * @return the validated value
-     * @throws IllegalStateException when the requirement fails
+     * @return the result of the requirement
      */
-    public static <T> T kRequireNotInstanceOf(final Class<?> illegalType, final T object, final String message)
-            throws IllegalStateException
+    public static <T> KResult<T> kRequireNotInstanceOf(final Class<?> illegalType, final T object, final String message)
     {
         return implementation.kRequireNotInstanceOf(illegalType, object, message);
-    }
-
-    /**
-     * Asserts that the supplied condition is {@code true}.
-     *
-     * @param condition the condition to evaluate
-     * @param message the failure message
-     * @return {@code true} when the assertion succeeds
-     */
-    public static boolean kAssertTrue(final boolean condition, final String message)
-    {
-        return implementation.kAssertTrue(condition, message);
-    }
-
-    /**
-     * Asserts that the supplied condition is {@code false}.
-     *
-     * @param condition the condition to evaluate
-     * @param message the failure message
-     * @return {@code true} when the assertion succeeds
-     */
-    public static boolean kAssertFalse(final boolean condition, final String message)
-    {
-        return implementation.kAssertFalse(condition, message);
-    }
-
-    /**
-     * Asserts that {@code expected} and {@code actual} are equal.
-     *
-     * @param expected the expected value
-     * @param actual the actual value
-     * @param message the failure message
-     * @return {@code true} when the assertion succeeds
-     */
-    public static boolean kAssertEquals(final Object expected, final Object actual, final String message)
-    {
-        return implementation.kAssertEquals(expected, actual, message);
-    }
-
-    /**
-     * Asserts that {@code expected} and {@code actual} are not equal.
-     *
-     * @param expected the disallowed value
-     * @param actual the actual value
-     * @param message the failure message
-     * @return {@code true} when the assertion succeeds
-     */
-    public static boolean kAssertNotEquals(final Object expected, final Object actual, final String message)
-    {
-        return implementation.kAssertNotEquals(expected, actual, message);
-    }
-
-    /**
-     * Asserts that {@code expected} and {@code actual} reference the same object.
-     *
-     * @param expected the expected reference
-     * @param actual the actual reference
-     * @param message the failure message
-     * @return {@code true} when the assertion succeeds
-     */
-    public static boolean kAssertSame(final Object expected, final Object actual, final String message)
-    {
-        return implementation.kAssertSame(expected, actual, message);
-    }
-
-    /**
-     * Asserts that {@code expected} and {@code actual} reference different objects.
-     *
-     * @param expected the disallowed reference
-     * @param actual the actual reference
-     * @param message the failure message
-     * @return {@code true} when the assertion succeeds
-     */
-    public static boolean kAssertNotSame(final Object expected, final Object actual, final String message)
-    {
-        return implementation.kAssertNotSame(expected, actual, message);
-    }
-
-    /**
-     * Asserts that the supplied object is {@code null}.
-     *
-     * @param object the value to validate
-     * @param message the failure message
-     * @return {@code true} when the assertion succeeds
-     */
-    public static boolean kAssertNull(final Object object, final String message)
-    {
-        return implementation.kAssertNull(object, message);
-    }
-
-    /**
-     * Asserts that the supplied object is not {@code null}.
-     *
-     * @param object the value to validate
-     * @param message the failure message
-     * @return {@code true} when the assertion succeeds
-     */
-    public static boolean kAssertNotNull(final Object object, final String message)
-    {
-        return implementation.kAssertNotNull(object, message);
-    }
-
-    /**
-     * Asserts that the supplied object is an instance of {@code expectedType}.
-     *
-     * @param expectedType the required runtime type
-     * @param object the value to validate
-     * @param message the failure message
-     * @return {@code true} when the assertion succeeds
-     */
-    public static boolean kAssertInstanceOf(final Class<?> expectedType, final Object object, final String message)
-    {
-        return implementation.kAssertInstanceOf(expectedType, object, message);
-    }
-
-    /**
-     * Asserts that the supplied object is not an instance of {@code expectedType}.
-     *
-     * @param expectedType the disallowed runtime type
-     * @param object the value to validate
-     * @param message the failure message
-     * @return {@code true} when the assertion succeeds
-     */
-    public static boolean kAssertNotInstanceOf(final Class<?> expectedType, final Object object, final String message)
-    {
-        return implementation.kAssertNotInstanceOf(expectedType, object, message);
     }
 
     /**

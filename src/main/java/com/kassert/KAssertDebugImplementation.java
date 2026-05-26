@@ -1,5 +1,8 @@
 package com.kassert;
 
+import com.kassert.ex.KFailed;
+import com.kassert.ex.KOk;
+import com.kassert.ex.KResult;
 import java.awt.Dialog;
 import java.awt.GraphicsEnvironment;
 import javax.swing.JDialog;
@@ -8,313 +11,78 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
 /**
- * Debug-mode KAssert implementation that shows a dialog before throwing.
+ * Debug-mode KAssert implementation that shows a dialog on failures.
  */
 final class KAssertDebugImplementation implements KAssertImplementation
 {
-    private static final java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger(KAssertDebugImplementation.class.getName());
+    private static final java.util.logging.Logger LOGGER = java.util.logging.Logger
+            .getLogger(KAssertDebugImplementation.class.getName());
 
     private static final int STACK_LINE_LIMIT = 1000;
 
-    /**
-     * Requires the supplied condition to be {@code true}.
-     *
-     * @param condition the condition to evaluate
-     * @param message the failure message
-     * @return {@code true} when the requirement succeeds
-     * @throws IllegalStateException when the requirement fails
-     */
-    public boolean kRequire(final boolean condition, final String message) throws IllegalStateException
+    public KResult<Boolean> kRequire(final boolean condition, final String message)
     {
-        return assertCondition(condition, message);
+        return requireResult(condition, Boolean.valueOf(condition), message);
     }
 
-    /**
-     * Requires the supplied condition to be {@code false}.
-     *
-     * @param condition the condition to evaluate
-     * @param message the failure message
-     * @return {@code true} when the condition is false
-     */
-    public boolean kRefuse(final boolean condition, final String message)
+    public KResult<Boolean> kRefuse(final boolean condition, final String message)
     {
-        return !condition;
+        final boolean accepted = !condition;
+        return requireResult(accepted, Boolean.valueOf(accepted), message);
     }
 
-    /**
-     * Requires {@code expected} and {@code actual} to be equal.
-     *
-     * @param <T> the expected type
-     * @param expected the expected value
-     * @param actual the actual value
-     * @param message the failure message
-     * @return the validated value
-     * @throws IllegalStateException when the requirement fails
-     */
-    @SuppressWarnings("unchecked")
-    public <T> T kRequireEquals(final T expected, final Object actual, final String message) throws IllegalStateException
+    public <T> KResult<T> kRequireEquals(final T expected, final Object actual, final String message)
     {
-        assertCondition(areEqual(expected, actual), message);
-        return (T) actual;
+        return requireResult(areEqual(expected, actual), expected, message);
     }
 
-    /**
-     * Requires {@code notExpected} and {@code actual} to be different.
-     *
-     * @param <T> the value type
-     * @param notExpected the disallowed value
-     * @param actual the actual value
-     * @param message the failure message
-     * @return the validated value
-     * @throws IllegalStateException when the requirement fails
-     */
-    @SuppressWarnings("unchecked")
-    public <T> T kRequireNotEquals(final T notExpected, final Object actual, final String message)
-            throws IllegalStateException
+    public <T> KResult<T> kRequireNotEquals(final T notExpected, final Object actual, final String message)
     {
-        assertCondition(!areEqual(notExpected, actual), message);
-        return (T) actual;
+        return requireResult(!areEqual(notExpected, actual), notExpected, message);
     }
 
-    /**
-     * Requires {@code expected} and {@code actual} to reference the same object.
-     *
-     * @param <T> the reference type
-     * @param expected the expected reference
-     * @param actual the actual reference
-     * @param message the failure message
-     * @return the validated value
-     * @throws IllegalStateException when the requirement fails
-     */
-    @SuppressWarnings("unchecked")
-    public <T> T kRequireSame(final T expected, final Object actual, final String message) throws IllegalStateException
+    public <T> KResult<T> kRequireSame(final T expected, final Object actual, final String message)
     {
-        assertCondition(expected == actual, message);
-        return (T) actual;
+        return requireResult(expected == actual, expected, message);
     }
 
-    /**
-     * Requires {@code notExpected} and {@code actual} to reference different objects.
-     *
-     * @param <T> the reference type
-     * @param notExpected the disallowed reference
-     * @param actual the actual reference
-     * @param message the failure message
-     * @return the validated value
-     * @throws IllegalStateException when the requirement fails
-     */
-    @SuppressWarnings("unchecked")
-    public <T> T kRequireNotSame(final T notExpected, final Object actual, final String message)
-            throws IllegalStateException
+    public <T> KResult<T> kRequireNotSame(final T notExpected, final Object actual, final String message)
     {
-        assertCondition(notExpected != actual, message);
-        return (T) actual;
+        return requireResult(notExpected != actual, notExpected, message);
     }
 
-    /**
-     * Requires the supplied object to be {@code null}.
-     *
-     * @param <T> the object type
-     * @param object the value to validate
-     * @param message the failure message
-     * @return {@code null}
-     * @throws IllegalStateException when the requirement fails
-     */
-    public <T> T kRequireNull(final T object, final String message) throws IllegalStateException
+    public <T> KResult<T> kRequireNull(final T object, final String message)
     {
-        assertCondition(object == null, message);
-        return null;
+        return requireResult(object == null, object, message);
     }
 
-    /**
-     * Requires the supplied object to be non-null.
-     *
-     * @param <T> the object type
-     * @param value the value to validate
-     * @param message the failure message
-     * @return the validated non-null value
-     * @throws IllegalStateException when the requirement fails
-     */
-    public <T> T kRequireNotNull(final T value, final String message) throws IllegalStateException
+    public <T> KResult<T> kRequireNotNull(final T value, final String message)
     {
-        assertCondition(value != null, message);
-        return value;
+        return requireResult(value != null, value, message);
     }
 
-    /**
-     * Requires the supplied object to be an instance of {@code expectedType}.
-     *
-     * @param <T> the object type
-     * @param expectedType the required runtime type
-     * @param object the value to validate
-     * @param message the failure message
-     * @return the validated value
-     * @throws IllegalStateException when the requirement fails
-     */
-    public <T> T kRequireInstanceOf(final Class<?> expectedType, final T object, final String message)
-            throws IllegalStateException
+    public <T> KResult<T> kRequireInstanceOf(final Class<?> expectedType, final T object, final String message)
     {
-        assertCondition(expectedType != null, "expectedType must not be null");
-        assertCondition(expectedType.isInstance(object), message);
-        return object;
-    }
-
-    /**
-     * Requires the supplied object not to be an instance of {@code illegalType}.
-     *
-     * @param <T> the object type
-     * @param illegalType the disallowed runtime type
-     * @param object the value to validate
-     * @param message the failure message
-     * @return the validated value
-     * @throws IllegalStateException when the requirement fails
-     */
-    public <T> T kRequireNotInstanceOf(final Class<?> illegalType, final T object, final String message)
-            throws IllegalStateException
-    {
-        assertCondition(illegalType != null, "illegalType must not be null");
-        assertCondition(!illegalType.isInstance(object), message);
-        return object;
-    }
-
-    /**
-     * Asserts that the supplied condition is {@code true}.
-     *
-     * @param condition the condition to evaluate
-     * @param message the failure message
-     * @return {@code true} when the assertion succeeds
-     */
-    public boolean kAssertTrue(final boolean condition, final String message)
-    {
-        return assertCheck(condition, message);
-    }
-
-    /**
-     * Asserts that the supplied condition is {@code false}.
-     *
-     * @param condition the condition to evaluate
-     * @param message the failure message
-     * @return {@code true} when the assertion succeeds
-     */
-    public boolean kAssertFalse(final boolean condition, final String message)
-    {
-        return assertCheck(!condition, message);
-    }
-
-    /**
-     * Asserts that {@code expected} and {@code actual} are equal.
-     *
-     * @param expected the expected value
-     * @param actual the actual value
-     * @param message the failure message
-     * @return {@code true} when the assertion succeeds
-     */
-    public boolean kAssertEquals(final Object expected, final Object actual, final String message)
-    {
-        return assertCheck(areEqual(expected, actual), message);
-    }
-
-    /**
-     * Asserts that {@code expected} and {@code actual} are not equal.
-     *
-     * @param expected the disallowed value
-     * @param actual the actual value
-     * @param message the failure message
-     * @return {@code true} when the assertion succeeds
-     */
-    public boolean kAssertNotEquals(final Object expected, final Object actual, final String message)
-    {
-        return assertCheck(!areEqual(expected, actual), message);
-    }
-
-    /**
-     * Asserts that {@code expected} and {@code actual} reference the same object.
-     *
-     * @param expected the expected reference
-     * @param actual the actual reference
-     * @param message the failure message
-     * @return {@code true} when the assertion succeeds
-     */
-    public boolean kAssertSame(final Object expected, final Object actual, final String message)
-    {
-        return assertCheck(expected == actual, message);
-    }
-
-    /**
-     * Asserts that {@code expected} and {@code actual} reference different objects.
-     *
-     * @param expected the disallowed reference
-     * @param actual the actual reference
-     * @param message the failure message
-     * @return {@code true} when the assertion succeeds
-     */
-    public boolean kAssertNotSame(final Object expected, final Object actual, final String message)
-    {
-        return assertCheck(expected != actual, message);
-    }
-
-    /**
-     * Asserts that the supplied object is {@code null}.
-     *
-     * @param object the value to validate
-     * @param message the failure message
-     * @return {@code true} when the assertion succeeds
-     */
-    public boolean kAssertNull(final Object object, final String message)
-    {
-        return assertCheck(object == null, message);
-    }
-
-    /**
-     * Asserts that the supplied object is not {@code null}.
-     *
-     * @param object the value to validate
-     * @param message the failure message
-     * @return {@code true} when the assertion succeeds
-     */
-    public boolean kAssertNotNull(final Object object, final String message)
-    {
-        return assertCheck(object != null, message);
-    }
-
-    /**
-     * Asserts that the supplied object is an instance of {@code expectedType}.
-     *
-     * @param expectedType the required runtime type
-     * @param object the value to validate
-     * @param message the failure message
-     * @return {@code true} when the assertion succeeds
-     */
-    public boolean kAssertInstanceOf(final Class<?> expectedType, final Object object, final String message)
-    {
-        if (!assertCheck(expectedType != null, "expectedType must not be null"))
+        if (expectedType == null)
         {
-            return false;
+            return failedResult(object, "expectedType must not be null");
         }
-        return assertCheck(expectedType.isInstance(object), message);
+        return requireResult(expectedType.isInstance(object), object, message);
     }
 
-    /**
-     * Asserts that the supplied object is not an instance of {@code expectedType}.
-     *
-     * @param expectedType the disallowed runtime type
-     * @param object the value to validate
-     * @param message the failure message
-     * @return {@code true} when the assertion succeeds
-     */
-    public boolean kAssertNotInstanceOf(final Class<?> expectedType, final Object object, final String message)
+    public <T> KResult<T> kRequireNotInstanceOf(final Class<?> illegalType, final T object, final String message)
     {
-        if (!assertCheck(expectedType != null, "expectedType must not be null"))
+        if (illegalType == null)
         {
-            return false;
+            return failedResult(object, "illegalType must not be null");
         }
-        return assertCheck(!expectedType.isInstance(object), message);
+        return requireResult(!illegalType.isInstance(object), object, message);
     }
 
     /**
      * Compares two values for equality with null safety.
      *
-     * @param left the left value
+     * @param left  the left value
      * @param right the right value
      * @return {@code true} when both values are equal
      */
@@ -331,51 +99,16 @@ final class KAssertDebugImplementation implements KAssertImplementation
         return left.equals(right);
     }
 
-    /**
-     * Validates a condition and fails with dialog + exception if false.
-     *
-     * @param condition the condition to validate
-     * @param message the failure message
-     * @return {@code true} when the condition is valid
-     * @throws IllegalStateException when the condition is false
-     */
-    private boolean assertCondition(final boolean condition, final String message) throws IllegalStateException
+    private <T> KResult<T> requireResult(final boolean condition, final T value, final String message)
     {
-        if (!condition)
-        {
-            failWithDialog(message);
-        }
-        return true;
+        return condition ? new KOk<T>(value) : failedResult(value, message);
     }
 
-    /**
-     * Validates an assertion condition, showing a dialog on failure without throwing.
-     *
-     * @param condition the condition to validate
-     * @param message the failure message
-     * @return {@code true} when the condition is valid, otherwise {@code false}
-     */
-    private boolean assertCheck(final boolean condition, final String message)
+    private <T> KResult<T> failedResult(final T value, final String message)
     {
-        if (!condition)
-        {
-            showFailureDialog(createAssertionError(message));
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * Shows failure information and throws the assertion exception.
-     *
-     * @param message the failure message
-     * @throws IllegalStateException always thrown after dialog handling
-     */
-    private void failWithDialog(final String message) throws IllegalStateException
-    {
-        final IllegalStateException error = createAssertionError(message);
+        final RuntimeException error = createAssertionError(message);
         showFailureDialog(error);
-        throw error;
+        return new KFailed<T>(value, error);
     }
 
     /**
@@ -384,13 +117,13 @@ final class KAssertDebugImplementation implements KAssertImplementation
      * @param message the failure message
      * @return the exception to throw
      */
-    private IllegalStateException createAssertionError(final String message)
+    private RuntimeException createAssertionError(final String message)
     {
         if (message == null)
         {
-            return new IllegalStateException("Assertion failed (No context information provided)");
+            return new RuntimeException("Assertion failed (No context information provided)");
         }
-        return new IllegalStateException(message);
+        return new RuntimeException(message);
     }
 
     /**
@@ -398,13 +131,14 @@ final class KAssertDebugImplementation implements KAssertImplementation
      *
      * @param error the assertion exception to display
      */
-    private void showFailureDialog(final IllegalStateException error)
+    private void showFailureDialog(final RuntimeException error)
     {
         LOGGER.log(java.util.logging.Level.SEVERE, "Assertion failed: " + error.getMessage(), error);
-        
+
         if (GraphicsEnvironment.isHeadless())
         {
-            LOGGER.log(java.util.logging.Level.SEVERE, "Headless environment detected, skipping failure dialog and exiting JVM.");
+            LOGGER.log(java.util.logging.Level.SEVERE,
+                    "Headless environment detected, skipping failure dialog and exiting JVM.");
             System.exit(1);
         }
 
@@ -414,9 +148,10 @@ final class KAssertDebugImplementation implements KAssertImplementation
         area.setCaretPosition(0);
         final JScrollPane scrollPane = new JScrollPane(area);
 
-        final String[] options = new String[] { "Continue", "Exit JVM" };
-        final JOptionPane optionPane =
-                new JOptionPane(scrollPane, JOptionPane.ERROR_MESSAGE, JOptionPane.DEFAULT_OPTION, null, options, options[0]);
+        final String[] options = new String[]
+        { "Continue", "Exit JVM" };
+        final JOptionPane optionPane = new JOptionPane(scrollPane, JOptionPane.ERROR_MESSAGE,
+                JOptionPane.DEFAULT_OPTION, null, options, options[0]);
         final JDialog dialog = optionPane.createDialog(null, "KAssert Debug Assertion Failure");
         dialog.setAlwaysOnTop(true);
         dialog.setModal(true);
@@ -436,7 +171,7 @@ final class KAssertDebugImplementation implements KAssertImplementation
      * @param error the assertion exception
      * @return a formatted dialog message including recent stack trace lines
      */
-    private String buildDialogText(final IllegalStateException error)
+    private String buildDialogText(final RuntimeException error)
     {
         final StringBuilder builder = new StringBuilder();
         builder.append(error.toString());
