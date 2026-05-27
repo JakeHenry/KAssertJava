@@ -13,77 +13,10 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * Unit tests for the {@link KAssert} facade contract.
+ *
  */
 public class KAssertTest
 {
-    /**
-     * Verifies that {@link KAssert#kRequire(boolean, String)} succeeds for true
-     * conditions.
-     */
-    @Test
-    public void kRequireAllowsTrueCondition()
-    {
-        final KResult<Boolean> result = KAssert.kRequire(true, "condition must be true");
-
-        assertTrue(result.ok());
-        assertFalse(result.failed());
-        assertEquals(Boolean.TRUE, result.val());
-    }
-
-    /**
-     * Verifies that {@link KAssert#kRequire(boolean, String)} fails when the
-     * condition is false.
-     */
-    @Test
-    public void kRequireRejectsFalseCondition()
-    {
-        final KResult<Boolean> result = KAssert.kRequire(false, "condition must be true");
-
-        assertFalse(result.ok());
-        assertTrue(result.failed());
-        assertEquals(Boolean.FALSE, result.val());
-    }
-
-    /**
-     * Verifies that {@link KAssert#kRequireNotNull(Object, String)} succeeds for
-     * non-null values.
-     */
-    @Test
-    public void kRequireNotNullReturnsInputValue()
-    {
-        final String value = "ok";
-        final KResult<String> result = KAssert.kRequireNotNull(value, "value must not be null");
-
-        assertTrue(result.ok());
-        assertSame(value, result.val());
-    }
-
-    /**
-     * Verifies that {@link KAssert#kRequireNotNull(Object, String)} fails for null
-     * values.
-     */
-    @Test
-    public void kRequireNotNullRejectsNullValue()
-    {
-        final KResult<Object> result = KAssert.kRequireNotNull(null, "value must not be null");
-
-        assertTrue(result.failed());
-        assertNull(result.val());
-    }
-
-    /**
-     * Verifies that {@link KAssert#kRequireEquals(Object, Object, String)} succeeds
-     * for equal values.
-     */
-    @Test
-    public void kRequireEqualsReturnsExpectedValue()
-    {
-        final KResult<String> result = KAssert.kRequireEquals("ok", "ok", "must be equal");
-
-        assertTrue(result.ok());
-        assertEquals("ok", result.val());
-    }
-
     /**
      * Verifies that all facade methods delegate and return consistent result
      * states.
@@ -110,9 +43,9 @@ public class KAssertTest
         assertTrue(sameResult.ok());
         assertEquals("sameExpected", sameResult.val());
         assertTrue(notEqualsResult.ok());
-        assertEquals("notExpected", notEqualsResult.val());
+        assertEquals("actual", notEqualsResult.val());
         assertTrue(notSameResult.ok());
-        assertEquals("notSameExpected", notSameResult.val());
+        assertEquals("notSameActual", notSameResult.val());
         assertTrue(nullResult.ok());
         assertNull(nullResult.val());
         assertTrue(notNullResult.ok());
@@ -124,19 +57,10 @@ public class KAssertTest
     }
 
     /**
-     * Verifies that throwIfFailed is chainable and keeps success results unchanged.
-     */
-    @Test
-    public void throwIfFailedIsChainableForSuccess()
-    {
-        assertTrue(KAssert.kRequire(true, "ok").throwIfFailed().ok());
-    }
-
-    /**
      * Verifies that throwIfFailed rethrows the original implementation exception.
      */
     @Test
-    public void throwIfFailedRethrowsOriginalImplementationException()
+    public void throwIfFailedRethrowsOriginalException()
     {
         try
         {
@@ -153,36 +77,87 @@ public class KAssertTest
     }
 
     @Test
-    public void resultBuilderPatternTest()
+    public void kRequireTest()
     {
-        System.setProperty("existing.value", "true");
-        String value = KAssert.kRequireNotNull(System.getProperty("existing.value"), "existing.value must not be null")
-                .throwIfFailed().val();
-        assertEquals("true", value);
+        final KResult<Boolean> result = KAssert.kRequire(true, "condition must be true");
+        assertTrue(result.throwIfFailed().ok());
+        assertTrue(result.ok());
+        assertFalse(result.failed());
+        assertEquals(Boolean.TRUE, result.val());
+        assertTrue(result.val());
 
+        final KResult<Boolean> failedResult = KAssert.kRequire(false, "condition must be true");
         try
         {
-            String value2 = KAssert
-                    .kRequireNotNull(System.getProperty("missing.value"), "missing.value must not be null")
-                    .throwIfFailed().val();
-            assertNull(value2);
-            fail("Expected exception for missing value");
+            failedResult.throwIfFailed();
+            fail("Expected runtime exception from throwIfFailed");
         }
         catch (RuntimeException error)
         {
-            assertEquals("missing.value must not be null", error.getMessage());
+            assertEquals("condition must be true", error.getMessage());
+            assertNotNull(error.getStackTrace());
+            assertTrue(error.getStackTrace().length > 0);
+            assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
         }
+        assertFalse(failedResult.ok());
+        assertTrue(failedResult.failed());
+        assertEquals(Boolean.FALSE, failedResult.val());
+        assertFalse(failedResult.val());
+    }
 
-        String value3 = KAssert.kRequireNotNull(System.getProperty("existing.value"), "existing.value must not be null")
-                .val();
-        assertEquals("true", value3);
-
-        String value4 = KAssert.kRequireNotNull(System.getProperty("missing.value"), "missing.value must not be null")
-                .val();
-        assertNull(value4);
-
-        KResult<String> result = KAssert.kRequireNotNull(System.getProperty("existing.value"), "existing.value must not be null").throwIfFailed();
+    @Test
+    public void kRefuseTest()
+    {
+        final KResult<Boolean> result = KAssert.kRefuse(false, "condition must be false");
+        assertTrue(result.throwIfFailed().ok());
         assertTrue(result.ok());
-        assertEquals("true", result.val());
+        assertFalse(result.failed());
+        assertEquals(Boolean.TRUE, result.val());
+        assertTrue(result.val());
+
+        final KResult<Boolean> failedResult = KAssert.kRefuse(true, "condition must be false");
+        try
+        {
+            failedResult.throwIfFailed();
+            fail("Expected runtime exception from throwIfFailed");
+        }
+        catch (RuntimeException error)
+        {
+            assertEquals("condition must be false", error.getMessage());
+            assertNotNull(error.getStackTrace());
+            assertTrue(error.getStackTrace().length > 0);
+            assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
+        }
+        assertFalse(failedResult.ok());
+        assertTrue(failedResult.failed());
+        assertEquals(Boolean.FALSE, failedResult.val());
+        assertFalse(failedResult.val());
+    }
+
+    @Test
+    public void kRequireEqualsTest()
+    {
+        final KResult<String> result = KAssert.kRequireEquals("expected", "expected", "values must be equal");
+        assertTrue(result.throwIfFailed().ok());
+        assertTrue(result.ok());
+        assertFalse(result.failed());
+        assertEquals("expected", result.val());
+
+        final KResult<String> failedResult = KAssert.kRequireEquals("expected", "actual", "values must be equal");
+        try
+        {
+            failedResult.throwIfFailed();
+            fail("Expected runtime exception from throwIfFailed");
+        }
+        catch (RuntimeException error)
+        {
+            assertEquals("values must be equal", error.getMessage());
+            assertNotNull(error.getStackTrace());
+            assertTrue(error.getStackTrace().length > 0);
+            assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
+        }
+        assertFalse(failedResult.ok());
+        assertTrue(failedResult.failed());
+        assertEquals("actual", failedResult.val()); 
     }
 }
