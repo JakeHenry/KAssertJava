@@ -13,33 +13,26 @@ import javax.swing.JTextArea;
 /**
  * Facade entry point for KAssert require operations.
  *
- * <p>
- * KAssert uses a compile-time conditional compilation flag ({@link #ENABLED})
- * to control whether assertions are active. The flag is set by the Maven build
- * profile ({@code -Pdebug} or {@code -Prelease}).
+ * <p> KAssert provides runtime assertion methods. For client-side compile-time
+ * elimination, use the generated constant {@code
+ * com.kassert.KAssertConfig.ENABLED} (created by the included annotation
+ * processor).
  *
- * <p>
- * Consumers should guard assertion calls for zero-overhead elimination in
+ * <p> Consumers should guard assertion calls for zero-overhead elimination in
  * release builds:
  * 
- * <pre>{@code
- * if (KAssert.ENABLED)
- * {
- *     KAssert.kRequire(condition, "message").throwIfFailed();
- * }
- * }</pre>
+ * <pre>{@code if (com.kassert.KAssertConfig.ENABLED) {
+ * KAssert.kRequire(condition, "message").throwIfFailed(); } }</pre>
  *
- * <p>
- * When {@code ENABLED} is {@code false}, the Java compiler eliminates guarded
- * blocks entirely from bytecode via dead code elimination.
+ * <p> When the generated client flag is {@code false}, the Java compiler
+ * eliminates guarded blocks entirely from bytecode via dead code elimination.
  */
 public final class KAssert
 {
     /**
-     * Compile-time conditional compilation flag. When {@code false}, the Java
-     * compiler eliminates code guarded by {@code if (KAssert.ENABLED)} from
-     * bytecode. Set by the Maven build profile ({@code -Pdebug} or
-     * {@code -Prelease}).
+     * Compile-time conditional compilation flag. This references
+     * {@code KAssertConfig.ENABLED}, which is generated in client builds by
+     * KAssert's annotation processor.
      */
     public static final boolean ENABLED = KAssertConfig.ENABLED;
 
@@ -57,13 +50,6 @@ public final class KAssert
 
     static
     {
-        if (!ENABLED && isJvmAssertionsEnabled())
-        {
-            LOG.log(java.util.logging.Level.SEVERE, "KAssert compiled as RELEASE but JVM assertions are enabled (-ea). "
-                    + "This is an invalid configuration.");
-            showInvalidStateDialog();
-        }
-
         final String cohfProperty = System.getProperty("kassert.cohf", "true");
         CRASH_ON_HEADLESS_FAILURE = Boolean.parseBoolean(cohfProperty);
     }
@@ -260,19 +246,6 @@ public final class KAssert
     }
 
     /**
-     * Checks whether JVM assertions are enabled. Used only for validation to detect
-     * contradictory configurations at class load time.
-     *
-     * @return {@code true} when assertions are enabled
-     */
-    static boolean isJvmAssertionsEnabled()
-    {
-        boolean enabled = false;
-        assert enabled = true; // intentional side effect to detect if assertions are enabled
-        return enabled;
-    }
-
-    /**
      * Compares two values for equality with null safety.
      *
      * @param left  the left value
@@ -356,29 +329,6 @@ public final class KAssert
         {
             System.exit(1);
         }
-    }
-
-    /**
-     * Displays the invalid configuration warning dialog.
-     */
-    private static void showInvalidStateDialog()
-    {
-        if (GraphicsEnvironment.isHeadless())
-        {
-            return;
-        }
-
-        final String warningMessage = "KAssert was compiled with the RELEASE profile (ENABLED = false) "
-                + "but the JVM has assertions enabled (-ea).\n\n" + "This is an invalid configuration. Either:\n"
-                + "  - Rebuild with -Pdebug if you want assertions active\n"
-                + "  - Remove the -ea JVM flag if you intend release mode";
-
-        final JOptionPane optionPane = new JOptionPane(warningMessage, JOptionPane.WARNING_MESSAGE);
-        final JDialog dialog = optionPane.createDialog(null, "KAssert Configuration Warning");
-        dialog.setAlwaysOnTop(true);
-        dialog.setModal(true);
-        dialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
-        dialog.setVisible(true);
     }
 
     /**

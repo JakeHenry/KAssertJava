@@ -3,32 +3,77 @@ Assertion Library For Java
 
 ## Conditional compilation
 
-KAssert uses a compile-time `static final boolean` flag (`KAssert.ENABLED`) to support
-the conditional compilation idiom. The flag is set by the Maven build profile and enables
-the Java compiler to eliminate assertion call-sites entirely from bytecode via dead code
-elimination.
+KAssert ships with an annotation processor that generates a client-side compile-time
+flag class:
+
+- `com.kassert.KAssertConfig.ENABLED`
+
+This flag is then assigned to a public constant in `com.kassert.KAssert.ENABLED` for client code to reference.
+
+Client code should guard KAssert calls with this generated constant so the Java compiler
+can remove assertion blocks in release mode.
 
 ### Consumer guard pattern
 
 ```java
-if (KAssert.ENABLED) {
+if (com.kassert.KAssert.ENABLED) {
     KAssert.kRequire(expensiveCheck(), "condition").throwIfFailed();
 }
 ```
 
-When `KAssert.ENABLED` is `false` (release profile), the compiler removes the entire
+When `KAssert.ENABLED` is `false`, the compiler removes the entire
 guarded block — no method call, no argument evaluation, zero overhead.
 
-### Build profiles
+## Client mode selection (single KAssert artifact)
 
-A Maven profile **must** be specified. The build fails with a clear error if neither is
-active:
+Clients switch mode at **their own compile time** by passing `-Akassert.enabled=...`
+to javac (via Maven compiler args). No separate KAssert debug/release artifacts are
+required.
+
+### Maven example
+
+```xml
+<properties>
+    <kassert.enabled>true</kassert.enabled>
+</properties>
+
+<profiles>
+    <profile>
+        <id>release</id>
+        <properties>
+            <kassert.enabled>false</kassert.enabled>
+        </properties>
+    </profile>
+    <profile>
+        <id>debug</id>
+        <properties>
+            <kassert.enabled>true</kassert.enabled>
+        </properties>
+    </profile>
+</profiles>
+
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+                <compilerArgs>
+                    <arg>-Akassert.enabled=${kassert.enabled}</arg>
+                </compilerArgs>
+            </configuration>
+        </plugin>
+    </plugins>
+</build>
+```
+
+Build the client with:
 
 ```bash
-# Debug build — assertions are active, failures show a Swing dialog
+# Client debug build (generated ENABLED=true)
 mvn clean verify -Pdebug
 
-# Release build — assertions are compiled out (no-ops)
+# Client release build (generated ENABLED=false)
 mvn clean verify -Prelease
 ```
 
@@ -44,67 +89,18 @@ Add KAssert as a normal Maven dependency:
 </dependency>
 ```
 
-If you are building KAssert from source first, install/deploy it with the profile you want
-to ship:
-
-```bash
-# Build/install debug artifact (ENABLED=true)
-mvn clean install -Pdebug
-
-# Build/install release artifact (ENABLED=false)
-mvn clean install -Prelease
-```
-
-The selected profile is baked into the produced JAR via `KAssertConfig.ENABLED`.
-
-### How a client switches debug vs release mode
-
-Mode is fixed at **KAssert build time**, not at client runtime. A client switches mode by
-using a different KAssert artifact/version:
-
-- debug client build -> depend on a KAssert JAR built with `-Pdebug`
-- release client build -> depend on a KAssert JAR built with `-Prelease`
-
-Typical setup is to publish two versions (for example, `1.0.0-debug` and
-`1.0.0-release`) and let the client select one via Maven profiles:
-
-```xml
-<properties>
-    <kassert.version>1.0.0-release</kassert.version>
-</properties>
-
-<profiles>
-    <profile>
-        <id>debug</id>
-        <properties>
-            <kassert.version>1.0.0-debug</kassert.version>
-        </properties>
-    </profile>
-</profiles>
-```
-
 ## Generated source and client builds
 
-KAssert generates `KAssertConfig.java` during **KAssert's own build** (from
-`src/main/java-templates`). That generated class is compiled into the KAssert JAR.
+KAssert's annotation processor generates `com.kassert.KAssertConfig` in the
+**client app build**. The client only needs to pass the processor option above.
 
-Client applications that depend on KAssert do **not** need to:
+Default behavior:
 
-- enable generated sources
-- add templating plugins
-- configure special compiler/source directories
-
-For clients, KAssert is a standard binary dependency.
-
-### Invalid state detection
-
-At class load time, KAssert validates that the compiled profile matches the JVM state.
-If the library was compiled with `-Prelease` (`ENABLED = false`) but the JVM has
-assertions enabled (`-ea`), a warning dialog is shown indicating a configuration
-mismatch.
+- if `kassert.enabled` is omitted, generated `ENABLED` defaults to `false`
+- pass `-Akassert.enabled=false` for release-mode elimination
 
 ## Build
 
 ```bash
-mvn clean verify -Pdebug
+mvn clean verify
 ```
