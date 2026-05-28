@@ -41,23 +41,23 @@ public class KAssertTest
         final KResult<String> notInstanceResult = KAssert.kRefuseInstanceOf(Number.class, "notInstanceValue",
                 () -> "notInstanceOf");
 
-        assertTrue(refuseResult.ok());
+        assertTrue(refuseResult.passes());
         assertEquals(Boolean.TRUE, refuseResult.val());
-        assertTrue(equalsResult.ok());
+        assertTrue(equalsResult.passes());
         assertEquals("expected", equalsResult.val());
-        assertTrue(sameResult.ok());
+        assertTrue(sameResult.passes());
         assertEquals("sameExpected", sameResult.val());
-        assertTrue(notEqualsResult.ok());
+        assertTrue(notEqualsResult.passes());
         assertEquals("actual", notEqualsResult.val());
-        assertTrue(notSameResult.ok());
+        assertTrue(notSameResult.passes());
         assertEquals("notSameActual", notSameResult.val());
-        assertTrue(nullResult.ok());
+        assertTrue(nullResult.passes());
         assertNull(nullResult.val());
-        assertTrue(notNullResult.ok());
+        assertTrue(notNullResult.passes());
         assertEquals("notNull", notNullResult.val());
-        assertTrue(instanceOfResult.ok());
+        assertTrue(instanceOfResult.passes());
         assertEquals("instanceValue", instanceOfResult.val());
-        assertTrue(notInstanceResult.ok());
+        assertTrue(notInstanceResult.passes());
         assertEquals("notInstanceValue", notInstanceResult.val());
     }
 
@@ -96,7 +96,7 @@ public class KAssertTest
             return "should not be used";
         });
 
-        assertTrue(result.ok());
+        assertTrue(result.passes());
         assertFalse(supplierCalled.get());
     }
 
@@ -191,9 +191,9 @@ public class KAssertTest
     public void kRequireTest()
     {
         final KResult<Boolean> result = KAssert.kRequire(true, () -> "condition must be true");
-        assertTrue(result.throwIfFailed().ok());
-        assertTrue(result.ok());
-        assertFalse(result.failed());
+        assertTrue(result.throwIfFailed().passes());
+        assertTrue(result.passes());
+        assertFalse(result.fails());
         assertEquals(Boolean.TRUE, result.val());
         assertTrue(result.val());
 
@@ -210,8 +210,8 @@ public class KAssertTest
             assertTrue(error.getStackTrace().length > 0);
             assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
         }
-        assertFalse(failedResult.ok());
-        assertTrue(failedResult.failed());
+        assertFalse(failedResult.passes());
+        assertTrue(failedResult.fails());
         assertEquals(Boolean.FALSE, failedResult.val());
         assertFalse(failedResult.val());
     }
@@ -224,9 +224,9 @@ public class KAssertTest
     public void kRefuseTest()
     {
         final KResult<Boolean> result = KAssert.kRefuse(false, () -> "condition must be false");
-        assertTrue(result.throwIfFailed().ok());
-        assertTrue(result.ok());
-        assertFalse(result.failed());
+        assertTrue(result.throwIfFailed().passes());
+        assertTrue(result.passes());
+        assertFalse(result.fails());
         assertEquals(Boolean.TRUE, result.val());
         assertTrue(result.val());
 
@@ -243,8 +243,8 @@ public class KAssertTest
             assertTrue(error.getStackTrace().length > 0);
             assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
         }
-        assertFalse(failedResult.ok());
-        assertTrue(failedResult.failed());
+        assertFalse(failedResult.passes());
+        assertTrue(failedResult.fails());
         assertEquals(Boolean.FALSE, failedResult.val());
         assertFalse(failedResult.val());
     }
@@ -257,9 +257,9 @@ public class KAssertTest
     public void kRequireEqualsTest()
     {
         final KResult<String> result = KAssert.kRequireEquals("expected", "expected", () -> "values must be equal");
-        assertTrue(result.throwIfFailed().ok());
-        assertTrue(result.ok());
-        assertFalse(result.failed());
+        assertTrue(result.throwIfFailed().passes());
+        assertTrue(result.passes());
+        assertFalse(result.fails());
         assertEquals("expected", result.val());
 
         final KResult<String> failedResult = KAssert.kRequireEquals("expected", "actual", () -> "values must be equal");
@@ -275,8 +275,8 @@ public class KAssertTest
             assertTrue(error.getStackTrace().length > 0);
             assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
         }
-        assertFalse(failedResult.ok());
-        assertTrue(failedResult.failed());
+        assertFalse(failedResult.passes());
+        assertTrue(failedResult.fails());
         assertEquals("actual", failedResult.val());
     }
 
@@ -288,9 +288,9 @@ public class KAssertTest
     public void kRefuseEqualsTest()
     {
         final KResult<String> result = KAssert.kRefuseEquals("expected", "actual", () -> "values must differ");
-        assertTrue(result.throwIfFailed().ok());
-        assertTrue(result.ok());
-        assertFalse(result.failed());
+        assertTrue(result.throwIfFailed().passes());
+        assertTrue(result.passes());
+        assertFalse(result.fails());
         assertEquals("actual", result.val());
 
         final KResult<String> failedResult = KAssert.kRefuseEquals("same", "same", () -> "values must differ");
@@ -306,8 +306,8 @@ public class KAssertTest
             assertTrue(error.getStackTrace().length > 0);
             assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
         }
-        assertFalse(failedResult.ok());
-        assertTrue(failedResult.failed());
+        assertFalse(failedResult.passes());
+        assertTrue(failedResult.fails());
         assertEquals("same", failedResult.val());
     }
 
@@ -320,9 +320,9 @@ public class KAssertTest
     {
         final Object shared = new Object();
         final KResult<Object> result = KAssert.kRequireSame(shared, shared, () -> "references must match");
-        assertTrue(result.throwIfFailed().ok());
-        assertTrue(result.ok());
-        assertFalse(result.failed());
+        assertTrue(result.throwIfFailed().passes());
+        assertTrue(result.passes());
+        assertFalse(result.fails());
         assertTrue(shared == result.val());
 
         final Object expected = new Object();
@@ -340,8 +340,8 @@ public class KAssertTest
             assertTrue(error.getStackTrace().length > 0);
             assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
         }
-        assertFalse(failedResult.ok());
-        assertTrue(failedResult.failed());
+        assertFalse(failedResult.passes());
+        assertTrue(failedResult.fails());
         assertTrue(actual == failedResult.val());
     }
 
@@ -355,9 +355,9 @@ public class KAssertTest
         final Object left = new Object();
         final Object right = new Object();
         final KResult<Object> result = KAssert.kRefuseSame(left, right, () -> "references must differ");
-        assertTrue(result.throwIfFailed().ok());
-        assertTrue(result.ok());
-        assertFalse(result.failed());
+        assertTrue(result.throwIfFailed().passes());
+        assertTrue(result.passes());
+        assertFalse(result.fails());
         assertTrue(right == result.val());
 
         final Object shared = new Object();
@@ -374,8 +374,8 @@ public class KAssertTest
             assertTrue(error.getStackTrace().length > 0);
             assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
         }
-        assertFalse(failedResult.ok());
-        assertTrue(failedResult.failed());
+        assertFalse(failedResult.passes());
+        assertTrue(failedResult.fails());
         assertTrue(shared == failedResult.val());
     }
 
@@ -387,9 +387,9 @@ public class KAssertTest
     public void kRequireNullTest()
     {
         final KResult<Object> result = KAssert.kRequireNull(null, () -> "value must be null");
-        assertTrue(result.throwIfFailed().ok());
-        assertTrue(result.ok());
-        assertFalse(result.failed());
+        assertTrue(result.throwIfFailed().passes());
+        assertTrue(result.passes());
+        assertFalse(result.fails());
         assertNull(result.val());
 
         final Object value = new Object();
@@ -406,8 +406,8 @@ public class KAssertTest
             assertTrue(error.getStackTrace().length > 0);
             assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
         }
-        assertFalse(failedResult.ok());
-        assertTrue(failedResult.failed());
+        assertFalse(failedResult.passes());
+        assertTrue(failedResult.fails());
         assertTrue(value == failedResult.val());
     }
 
@@ -420,9 +420,9 @@ public class KAssertTest
     {
         final String value = "present";
         final KResult<String> result = KAssert.kRefuseNull(value, () -> "value must not be null");
-        assertTrue(result.throwIfFailed().ok());
-        assertTrue(result.ok());
-        assertFalse(result.failed());
+        assertTrue(result.throwIfFailed().passes());
+        assertTrue(result.passes());
+        assertFalse(result.fails());
         assertEquals("present", result.val());
 
         final KResult<Object> failedResult = KAssert.kRefuseNull(null, () -> "value must not be null");
@@ -438,8 +438,8 @@ public class KAssertTest
             assertTrue(error.getStackTrace().length > 0);
             assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
         }
-        assertFalse(failedResult.ok());
-        assertTrue(failedResult.failed());
+        assertFalse(failedResult.passes());
+        assertTrue(failedResult.fails());
         assertNull(failedResult.val());
     }
 
@@ -452,9 +452,9 @@ public class KAssertTest
     {
         final Integer number = Integer.valueOf(42);
         final KResult<Integer> result = KAssert.kRequireInstanceOf(Number.class, number, () -> "value must be Number");
-        assertTrue(result.throwIfFailed().ok());
-        assertTrue(result.ok());
-        assertFalse(result.failed());
+        assertTrue(result.throwIfFailed().passes());
+        assertTrue(result.passes());
+        assertFalse(result.fails());
         assertEquals(Integer.valueOf(42), result.val());
 
         final KResult<String> failedTypeResult = KAssert.kRequireInstanceOf(Number.class, "text",
@@ -471,8 +471,8 @@ public class KAssertTest
             assertTrue(error.getStackTrace().length > 0);
             assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
         }
-        assertFalse(failedTypeResult.ok());
-        assertTrue(failedTypeResult.failed());
+        assertFalse(failedTypeResult.passes());
+        assertTrue(failedTypeResult.fails());
         assertEquals("text", failedTypeResult.val());
 
         final KResult<String> failedNullTypeResult = KAssert.kRequireInstanceOf(null, "text",
@@ -489,8 +489,8 @@ public class KAssertTest
             assertTrue(error.getStackTrace().length > 0);
             assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
         }
-        assertFalse(failedNullTypeResult.ok());
-        assertTrue(failedNullTypeResult.failed());
+        assertFalse(failedNullTypeResult.passes());
+        assertTrue(failedNullTypeResult.fails());
         assertEquals("text", failedNullTypeResult.val());
     }
 
@@ -503,9 +503,9 @@ public class KAssertTest
     {
         final String value = "text";
         final KResult<String> result = KAssert.kRefuseInstanceOf(Number.class, value, () -> "value must not be Number");
-        assertTrue(result.throwIfFailed().ok());
-        assertTrue(result.ok());
-        assertFalse(result.failed());
+        assertTrue(result.throwIfFailed().passes());
+        assertTrue(result.passes());
+        assertFalse(result.fails());
         assertEquals("text", result.val());
 
         final KResult<String> failedTypeResult = KAssert.kRefuseInstanceOf(String.class, value,
@@ -522,8 +522,8 @@ public class KAssertTest
             assertTrue(error.getStackTrace().length > 0);
             assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
         }
-        assertFalse(failedTypeResult.ok());
-        assertTrue(failedTypeResult.failed());
+        assertFalse(failedTypeResult.passes());
+        assertTrue(failedTypeResult.fails());
         assertEquals("text", failedTypeResult.val());
 
         final KResult<String> failedNullTypeResult = KAssert.kRefuseInstanceOf(null, value,
@@ -540,8 +540,8 @@ public class KAssertTest
             assertTrue(error.getStackTrace().length > 0);
             assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
         }
-        assertFalse(failedNullTypeResult.ok());
-        assertTrue(failedNullTypeResult.failed());
+        assertFalse(failedNullTypeResult.passes());
+        assertTrue(failedNullTypeResult.fails());
         assertEquals("text", failedNullTypeResult.val());
     }
 }

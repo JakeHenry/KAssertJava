@@ -55,7 +55,7 @@ public class KResult<T>
      * 
      * @return {@code true} when this result is a success
      */
-    public boolean ok()
+    public boolean passes()
     {
         return this instanceof KSuccess;
     }
@@ -65,20 +65,20 @@ public class KResult<T>
      * 
      * @return {@code true} when this result is a failure
      */
-    public boolean failed()
+    public boolean fails()
     {
         return this instanceof KFailed;
     }
 
     /**
-     * Throws the original implementation exception when this result is failed.
+     * Throws the original implementation exception when this result is a failure.
      *
      * @return this result for chaining
      * @throws RuntimeException when this result is a failure
      */
     public KResult<T> throwIfFailed() throws RuntimeException
     {
-        if (failed())
+        if (fails())
         {
             if (failureException != null)
             {
