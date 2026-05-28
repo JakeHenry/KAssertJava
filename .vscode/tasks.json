@@ -4,51 +4,34 @@
     {
       "label": "Maven: Clean Verify",
       "type": "shell",
-      "command": "cls && D:/apache-maven-3.2.5/bin/mvn.bat clean verify",
+      "command": "cls && ${workspaceFolder}/mvnw.cmd clean verify",
       "options": {
-        "cwd": "${workspaceFolder}",
-        "env": {
-          "JAVA_HOME": "C:/Program Files/Java/jdk8u492-b09",
-          "JAVA6_HOME": "C:/Program Files/Java/jdk1.6.0_45",
-          "MAVEN_HOME": "D:/apache-maven-3.2.5"
-        }
+        "cwd": "${workspaceFolder}"
       },
       "group": "build",
-      "problemMatcher": [
-        "$javac"
-      ]
+      "problemMatcher": []
     },
     {
       "label": "Maven: Clean Test",
       "type": "shell",
-      "command": "cls && D:/apache-maven-3.2.5/bin/mvn.bat clean test",
+      "command": "cls && ${workspaceFolder}/mvnw.cmd clean test",
       "options": {
-        "cwd": "${workspaceFolder}",
-        "env": {
-          "JAVA_HOME": "C:/Program Files/Java/jdk8u492-b09",
-          "JAVA6_HOME": "C:/Program Files/Java/jdk1.6.0_45",
-          "MAVEN_HOME": "D:/apache-maven-3.2.5"
-        }
+        "cwd": "${workspaceFolder}"
       },
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      },
+      "group": "build",
       "problemMatcher": []
     },
     {
       "label": "Maven: Clean Package",
       "type": "shell",
-      "command": "cls && D:/apache-maven-3.2.5/bin/mvn.bat clean package",
+      "command": "cls && ${workspaceFolder}/mvnw.cmd clean package",
       "options": {
-        "cwd": "${workspaceFolder}",
-        "env": {
-          "JAVA_HOME": "C:/Program Files/Java/jdk8u492-b09",
-          "JAVA6_HOME": "C:/Program Files/Java/jdk1.6.0_45",
-          "MAVEN_HOME": "D:/apache-maven-3.2.5"
-        }
+        "cwd": "${workspaceFolder}"
       },
-      "group": "build",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
       "problemMatcher": []
     }
   ]

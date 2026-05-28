@@ -5,7 +5,6 @@
   "files.exclude": {
     "**/target": true
   },
-  "java.jdt.ls.java.home": "C:/Program Files/Java/jdk8u492-b09",
   "java.format.settings.url": ".vscode/java-formatter.xml",
   "[java]": {
     "editor.detectIndentation": false
