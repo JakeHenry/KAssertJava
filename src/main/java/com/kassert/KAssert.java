@@ -1,14 +1,8 @@
 package com.kassert;
 
 import com.kassert.ex.KFailed;
-import com.kassert.ex.KOk;
+import com.kassert.ex.KSuccess;
 import com.kassert.ex.KResult;
-import java.awt.Dialog;
-import java.awt.GraphicsEnvironment;
-import javax.swing.JDialog;
-import javax.swing.JOptionPane;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 
 /**
  * Facade entry point for KAssert require operations.
@@ -29,30 +23,14 @@ import javax.swing.JTextArea;
  */
 public final class KAssert
 {
+    private static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger(KAssert.class.getName());
+
     /**
      * Compile-time conditional compilation flag. This references
      * {@code KAssertConfig.ENABLED}, which is generated in client builds by
      * KAssert's annotation processor.
      */
     public static final boolean ENABLED = KAssertConfig.ENABLED;
-
-    /**
-     * When true, KAssert will call System.exit(1) on assertion failures in headless
-     * environments. This is useful for CI environments where a failure dialog
-     * cannot be shown and the process should terminate immediately. By default,
-     * KAssert will not exit the JVM on headless failures to allow for easier
-     * debugging and log capture. Can be set via the system property "kassert.cohf"
-     * (e.g. -Dkassert.cohf=false).
-     */
-    private static final boolean CRASH_ON_HEADLESS_FAILURE;
-
-    private static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger(KAssert.class.getName());
-
-    static
-    {
-        final String cohfProperty = System.getProperty("kassert.cohf", "true");
-        CRASH_ON_HEADLESS_FAILURE = Boolean.parseBoolean(cohfProperty);
-    }
 
     /**
      * Prevents instantiation of this utility class.
@@ -71,11 +49,8 @@ public final class KAssert
      */
     public static KResult<Boolean> kRequire(final boolean condition, final String message)
     {
-        if (!condition)
-        {
-            return failedResult(Boolean.valueOf(condition), message);
-        }
-        return new KOk<Boolean>(Boolean.valueOf(condition));
+        if (!condition) return failedResult(Boolean.valueOf(condition), message);
+        return new KSuccess<Boolean>(Boolean.valueOf(condition));
     }
 
     /**
@@ -87,11 +62,8 @@ public final class KAssert
      */
     public static KResult<Boolean> kRefuse(final boolean condition, final String message)
     {
-        if (condition)
-        {
-            return failedResult(Boolean.valueOf(!condition), message);
-        }
-        return new KOk<Boolean>(Boolean.valueOf(!condition));
+        if (condition) return failedResult(Boolean.valueOf(!condition), message);
+        return new KSuccess<Boolean>(Boolean.valueOf(!condition));
     }
 
     /**
@@ -105,11 +77,8 @@ public final class KAssert
      */
     public static <T, K> KResult<K> kRequireEquals(final T expected, final K actual, final String message)
     {
-        if (!areEqual(expected, actual))
-        {
-            return failedResult(actual, message);
-        }
-        return new KOk<K>(actual);
+        if (!areEqual(expected, actual)) return failedResult(actual, message);
+        return new KSuccess<K>(actual);
     }
 
     /**
@@ -123,11 +92,8 @@ public final class KAssert
      */
     public static <T, K> KResult<K> kRequireNotEquals(final T notExpected, final K actual, final String message)
     {
-        if (areEqual(notExpected, actual))
-        {
-            return failedResult(actual, message);
-        }
-        return new KOk<K>(actual);
+        if (areEqual(notExpected, actual)) return failedResult(actual, message);
+        return new KSuccess<K>(actual);
     }
 
     /**
@@ -141,11 +107,8 @@ public final class KAssert
      */
     public static <T, K> KResult<K> kRequireSame(final T expected, final K actual, final String message)
     {
-        if (expected != actual)
-        {
-            return failedResult(actual, message);
-        }
-        return new KOk<K>(actual);
+        if (expected != actual) return failedResult(actual, message);
+        return new KSuccess<K>(actual);
     }
 
     /**
@@ -160,11 +123,8 @@ public final class KAssert
      */
     public static <T, K> KResult<K> kRequireNotSame(final T notExpected, final K actual, final String message)
     {
-        if (notExpected == actual)
-        {
-            return failedResult(actual, message);
-        }
-        return new KOk<K>(actual);
+        if (notExpected == actual) return failedResult(actual, message);
+        return new KSuccess<K>(actual);
     }
 
     /**
@@ -177,11 +137,8 @@ public final class KAssert
      */
     public static <T> KResult<T> kRequireNull(final T object, final String message)
     {
-        if (object != null)
-        {
-            return failedResult(object, message);
-        }
-        return new KOk<T>(object);
+        if (object != null) return failedResult(object, message);
+        return new KSuccess<T>(object);
     }
 
     /**
@@ -194,11 +151,8 @@ public final class KAssert
      */
     public static <T> KResult<T> kRequireNotNull(final T value, final String message)
     {
-        if (value == null)
-        {
-            return failedResult(value, message);
-        }
-        return new KOk<T>(value);
+        if (value == null) return failedResult(value, message);
+        return new KSuccess<T>(value);
     }
 
     /**
@@ -212,15 +166,9 @@ public final class KAssert
      */
     public static <T> KResult<T> kRequireInstanceOf(final Class<?> expectedType, final T object, final String message)
     {
-        if (expectedType == null)
-        {
-            return failedResult(object, "expectedType must not be null");
-        }
-        if (!expectedType.isInstance(object))
-        {
-            return failedResult(object, message);
-        }
-        return new KOk<T>(object);
+        if (expectedType == null) return failedResult(object, "expectedType must not be null");
+        if (!expectedType.isInstance(object)) return failedResult(object, message);
+        return new KSuccess<T>(object);
     }
 
     /**
@@ -242,7 +190,20 @@ public final class KAssert
         {
             return failedResult(object, message);
         }
-        return new KOk<T>(object);
+        return new KSuccess<T>(object);
+    }
+
+    /**
+     * Registers a supplementary assertion failure handler for debug mode only.
+     *
+     * <p>
+     * When {@link #ENABLED} is {@code false}, this method is a no-op.
+     *
+     * @param handler the supplementary handler to register
+     */
+    public static void registerDebugFailureHandler(final KAssertionFailureHandler handler)
+    {
+        if (KAssertConfig.ENABLED) KFailureHandlerDispatcher.INSTANCE.registerSupplementaryHandler(handler);
     }
 
     /**
@@ -269,9 +230,9 @@ public final class KAssert
     {
         final RuntimeException error = createAssertionError(message);
         LOG.log(java.util.logging.Level.SEVERE, "Assertion failed: " + error.getMessage(), error);
-        if (ENABLED)
+        if (KAssertConfig.ENABLED)
         {
-            showFailureDialog(error);
+            KFailureHandlerDispatcher.INSTANCE.dispatchDebugFailure(new KAssertionFailureContext(error));
         }
         return new KFailed<T>(value, error);
     }
@@ -282,79 +243,12 @@ public final class KAssert
      * @param message the failure message
      * @return the exception to report
      */
-    private static RuntimeException createAssertionError(final String message)
+    private static IllegalStateException createAssertionError(final String message)
     {
         if (message == null)
         {
-            return new RuntimeException("Assertion failed (No context information provided)");
+            return new IllegalStateException("Assertion failed (No context information provided)");
         }
-        return new RuntimeException(message);
-    }
-
-    /**
-     * Displays the assertion failure dialog when the environment supports UI.
-     *
-     * @param error the assertion exception to display
-     */
-    private static void showFailureDialog(final RuntimeException error)
-    {
-        if (GraphicsEnvironment.isHeadless())
-        {
-            if (!CRASH_ON_HEADLESS_FAILURE)
-            {
-                return;
-            }
-            LOG.log(java.util.logging.Level.SEVERE, "Exiting JVM due to assertion failure.");
-            System.exit(1);
-        }
-
-        final JTextArea area = new JTextArea(buildDialogText(error));
-        area.setEditable(false);
-        area.setLineWrap(false);
-        area.setCaretPosition(0);
-        final JScrollPane scrollPane = new JScrollPane(area);
-
-        final String[] options = new String[]
-        { "Continue", "Exit JVM" };
-        final JOptionPane optionPane = new JOptionPane(scrollPane, JOptionPane.ERROR_MESSAGE,
-                JOptionPane.DEFAULT_OPTION, null, options, options[0]);
-        final JDialog dialog = optionPane.createDialog(null, "KAssert Debug Assertion Failure");
-        dialog.setAlwaysOnTop(true);
-        dialog.setModal(true);
-        dialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
-        dialog.setVisible(true);
-
-        final Object selectedValue = optionPane.getValue();
-        if (options[1].equals(selectedValue))
-        {
-            System.exit(1);
-        }
-    }
-
-    /**
-     * Builds the text shown in the debug failure dialog.
-     *
-     * @param error the assertion exception
-     * @return a formatted dialog message including recent stack trace lines
-     */
-    private static String buildDialogText(final RuntimeException error)
-    {
-        final StringBuilder builder = new StringBuilder();
-        builder.append(error.toString());
-        builder.append('\n');
-        builder.append('\n');
-        builder.append("Most recent stack trace lines:");
-        builder.append('\n');
-
-        final StackTraceElement[] stack = error.getStackTrace();
-        int i = 0;
-        while (i < stack.length)
-        {
-            builder.append("at ");
-            builder.append(stack[i].toString());
-            builder.append('\n');
-            i++;
-        }
-        return builder.toString();
+        return new IllegalStateException(message);
     }
 }

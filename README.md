@@ -89,6 +89,33 @@ Add KAssert as a normal Maven dependency:
 </dependency>
 ```
 
+## Debug-mode supplementary failure handlers
+
+In debug mode (`KAssert.ENABLED == true`), KAssert always shows the built-in
+assertion failure popup dialog. Clients can also register supplementary failure
+handlers at runtime.
+
+```java
+import com.kassert.KAssert;
+import com.kassert.failure.KAssertionFailureContext;
+import com.kassert.failure.KAssertionFailureHandler;
+
+if (KAssert.ENABLED) {
+    KAssert.registerDebugFailureHandler(new KAssertionFailureHandler() {
+        public void onFailure(final KAssertionFailureContext context) {
+            // example: enqueue email/file/ftp work
+        }
+    });
+}
+```
+
+Behavior contract:
+
+- supplementary handlers are started asynchronously (fire-and-forget)
+- supplementary handler failures are logged and do not stop popup handling
+- popup handling remains enabled and blocking in debug mode
+- in release mode (`KAssert.ENABLED == false`), registration is a no-op
+
 ## Generated source and client builds
 
 KAssert's annotation processor generates `com.kassert.KAssertConfig` in the
@@ -96,7 +123,7 @@ KAssert's annotation processor generates `com.kassert.KAssertConfig` in the
 
 Default behavior:
 
-- if `kassert.enabled` is omitted, generated `ENABLED` defaults to `false`
+- if `kassert.enabled` is omitted, generated `ENABLED` defaults to `false` and a log message at SEVERE level is emitted to alert the client of the missing configuration
 - pass `-Akassert.enabled=false` for release-mode elimination
 
 ## Build

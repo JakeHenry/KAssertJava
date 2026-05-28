@@ -1,15 +1,19 @@
 package com.kassert;
 
-import com.kassert.ex.KResult;
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.fail;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+
+import org.junit.Test;
+
+import com.kassert.ex.KResult;
 
 /**
  * Unit tests for the {@link KAssert} facade contract.
@@ -73,6 +77,87 @@ public class KAssertTest
             assertNotNull(error.getStackTrace());
             assertTrue(error.getStackTrace().length > 0);
             assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
+        }
+    }
+
+    @Test
+    public void supplementaryHandlerExecutes() throws InterruptedException
+    {
+        boolean originalEnabled = KAssertConfig.ENABLED;
+        try
+        {
+            KAssertConfig.setEnabledForTesting(true);
+            final AtomicReference<Object> invocationFlag = new AtomicReference<>();
+            final CountDownLatch handlerStartedLatch = new CountDownLatch(1);
+            final KAssertionFailureHandler testHandler = new KAssertionFailureHandler()
+            {
+                @Override
+                public void onFailure(KAssertionFailureContext context)
+                {
+                    assertNotNull(context);
+                    assertNotNull(context.assertionError());
+                    assertEquals("condition must be true", context.assertionError().getMessage());
+                    assertNotNull(context.threadName());
+                    assertTrue(context.threadId() > 0);
+                    invocationFlag.set(new Object());
+                    handlerStartedLatch.countDown();
+                }
+            };
+            KFailureHandlerDispatcher.INSTANCE.registerSupplementaryHandler(testHandler);
+            try
+            {
+                KAssert.kRequire(false, "condition must be true").throwIfFailed();
+                fail("Expected runtime exception from throwIfFailed");
+            }
+            catch (RuntimeException error)
+            {
+                // expected
+            }
+            assertNotNull(invocationFlag.get());
+            assertTrue(handlerStartedLatch.await(30, TimeUnit.SECONDS));
+        }
+        finally
+        {
+            KAssertConfig.setEnabledForTesting(originalEnabled);
+            KFailureHandlerDispatcher.INSTANCE.clearSupplementaryHandlers();
+        }
+    }
+
+    @Test
+    public void supplementaryHandlerNotExecutedWhenDisabled() throws InterruptedException
+    {
+        boolean originalEnabled = KAssertConfig.ENABLED;
+        try
+        {
+            KAssertConfig.setEnabledForTesting(false);
+            final AtomicReference<Object> invocationFlag = new AtomicReference<>();
+            final CountDownLatch handlerStartedLatch = new CountDownLatch(1);
+            final KAssertionFailureHandler testHandler = new KAssertionFailureHandler()
+            {
+                @Override
+                public void onFailure(KAssertionFailureContext context)
+                {
+                    invocationFlag.set(new Object());
+                    handlerStartedLatch.countDown();
+                }
+            };
+            KFailureHandlerDispatcher.INSTANCE.registerSupplementaryHandler(testHandler);
+            try
+            {
+                KAssert.kRequire(false, "condition must be true").throwIfFailed();
+                fail("Expected runtime exception from throwIfFailed");
+            }
+            catch (RuntimeException error)
+            {
+                // expected
+            }
+            assertNull(invocationFlag.get());
+            assertFalse(handlerStartedLatch.await(3, TimeUnit.SECONDS));
+        }
+        finally
+        {
+            KAssertConfig.setEnabledForTesting(originalEnabled);
+            KFailureHandlerDispatcher.INSTANCE.clearSupplementaryHandlers();
         }
     }
 
@@ -158,6 +243,6 @@ public class KAssertTest
         }
         assertFalse(failedResult.ok());
         assertTrue(failedResult.failed());
-        assertEquals("actual", failedResult.val()); 
+        assertEquals("actual", failedResult.val());
     }
 }

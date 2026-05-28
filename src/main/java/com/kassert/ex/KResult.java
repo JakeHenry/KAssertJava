@@ -52,7 +52,7 @@ public class KResult<T>
      */
     public boolean ok()
     {
-        return this instanceof KOk;
+        return this instanceof KSuccess;
     }
 
     /**
