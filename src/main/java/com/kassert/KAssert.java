@@ -85,17 +85,17 @@ public final class KAssert
     }
 
     /**
-     * Requires {@code notExpected} and {@code actual} to be different.
+     * Refuses {@code actual} when it equals {@code refusedValue}.
      *
-     * @param <T>         the value type
-     * @param notExpected the disallowed value
-     * @param actual      the actual value
-     * @param message     the failure message
+     * @param <T>          the value type
+     * @param refusedValue the refused value
+     * @param actual       the actual value
+     * @param message      the failure message
      * @return the result of the requirement
      */
-    public static <T, K> KResult<K> kRequireNotEquals(final T notExpected, final K actual, final String message)
+    public static <T, K> KResult<K> kRefuseEquals(final T refusedValue, final K actual, final String message)
     {
-        if (Objects.equals(notExpected, actual)) return failedResult(actual, message);
+        if (Objects.equals(refusedValue, actual)) return failedResult(actual, message);
         return new KSuccess<K>(actual);
     }
 
@@ -115,18 +115,18 @@ public final class KAssert
     }
 
     /**
-     * Requires {@code notExpected} and {@code actual} to reference different
-     * objects.
+     * Refuses {@code actual} when it references the same object as
+     * {@code refusedReference}.
      *
-     * @param <T>         the reference type
-     * @param notExpected the disallowed reference
-     * @param actual      the actual reference
-     * @param message     the failure message
+     * @param <T>               the reference type
+     * @param refusedReference  the refused reference
+     * @param actual            the actual reference
+     * @param message           the failure message
      * @return the result of the requirement
      */
-    public static <T, K> KResult<K> kRequireNotSame(final T notExpected, final K actual, final String message)
+    public static <T, K> KResult<K> kRefuseSame(final T refusedReference, final K actual, final String message)
     {
-        if (notExpected == actual) return failedResult(actual, message);
+        if (refusedReference == actual) return failedResult(actual, message);
         return new KSuccess<K>(actual);
     }
 
@@ -145,14 +145,14 @@ public final class KAssert
     }
 
     /**
-     * Requires the supplied object to be non-null.
+     * Refuses a {@code null} supplied object.
      *
      * @param <T>     the object type
      * @param value   the value to validate
      * @param message the failure message
      * @return the result of the requirement
      */
-    public static <T> KResult<T> kRequireNotNull(final T value, final String message)
+    public static <T> KResult<T> kRefuseNull(final T value, final String message)
     {
         if (value == null) return failedResult(value, message);
         return new KSuccess<T>(value);
@@ -175,18 +175,18 @@ public final class KAssert
     }
 
     /**
-     * Requires the supplied object not to be an instance of {@code illegalType}.
+     * Refuses a supplied object that is an instance of {@code illegalType}.
      *
      * @param <T>         the object type
-     * @param illegalType the disallowed runtime type
+     * @param refusedType the refused runtime type
      * @param object      the value to validate
      * @param message     the failure message
      * @return the result of the requirement
      */
-    public static <T> KResult<T> kRequireNotInstanceOf(final Class<?> illegalType, final T object, final String message)
+    public static <T> KResult<T> kRefuseInstanceOf(final Class<?> refusedType, final T object, final String message)
     {
-        if (illegalType == null) return failedResult(object, "illegalType must not be null");
-        if (illegalType.isInstance(object)) return failedResult(object, message);
+        if (refusedType == null) return failedResult(object, "refusedType must not be null");
+        if (refusedType.isInstance(object)) return failedResult(object, message);
         return new KSuccess<T>(object);
     }
 
