@@ -2,6 +2,7 @@ package com.kassert;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -66,7 +67,7 @@ public final class KFailureHandlerDispatcher
      */
     public void dispatchDebugFailure(final KAssertionFailureContext context)
     {
-        if (context == null) throw new IllegalArgumentException("context must not be null");
+        Objects.requireNonNull(context, "context must not be null");
 
         final List<KAssertionFailureHandler> handlersToRun = getSupplementaryHandlersSnapshot();
         for (KAssertionFailureHandler handler : handlersToRun)

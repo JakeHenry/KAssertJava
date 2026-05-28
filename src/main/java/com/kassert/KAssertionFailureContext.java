@@ -1,5 +1,7 @@
 package com.kassert;
 
+import java.util.Objects;
+
 /**
  * Immutable context for a KAssert assertion failure event.
  */
@@ -21,10 +23,7 @@ public final class KAssertionFailureContext
      */
     public KAssertionFailureContext(final RuntimeException assertionError)
     {
-        if (assertionError == null)
-        {
-            throw new IllegalArgumentException("assertionError must not be null");
-        }
+        Objects.requireNonNull(assertionError, "assertionError cannot be null");
 
         final Thread currentThread = Thread.currentThread();
         this.assertionError = assertionError;

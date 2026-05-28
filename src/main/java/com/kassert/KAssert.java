@@ -1,8 +1,10 @@
 package com.kassert;
 
+import java.util.Objects;
+
 import com.kassert.ex.KFailed;
-import com.kassert.ex.KSuccess;
 import com.kassert.ex.KResult;
+import com.kassert.ex.KSuccess;
 
 /**
  * Facade entry point for KAssert require operations.
@@ -78,7 +80,7 @@ public final class KAssert
      */
     public static <T, K> KResult<K> kRequireEquals(final T expected, final K actual, final String message)
     {
-        if (!areEqual(expected, actual)) return failedResult(actual, message);
+        if (!Objects.equals(expected, actual)) return failedResult(actual, message);
         return new KSuccess<K>(actual);
     }
 
@@ -93,7 +95,7 @@ public final class KAssert
      */
     public static <T, K> KResult<K> kRequireNotEquals(final T notExpected, final K actual, final String message)
     {
-        if (areEqual(notExpected, actual)) return failedResult(actual, message);
+        if (Objects.equals(notExpected, actual)) return failedResult(actual, message);
         return new KSuccess<K>(actual);
     }
 
@@ -183,14 +185,8 @@ public final class KAssert
      */
     public static <T> KResult<T> kRequireNotInstanceOf(final Class<?> illegalType, final T object, final String message)
     {
-        if (illegalType == null)
-        {
-            return failedResult(object, "illegalType must not be null");
-        }
-        if (illegalType.isInstance(object))
-        {
-            return failedResult(object, message);
-        }
+        if (illegalType == null) return failedResult(object, "illegalType must not be null");
+        if (illegalType.isInstance(object)) return failedResult(object, message);
         return new KSuccess<T>(object);
     }
 
@@ -208,22 +204,10 @@ public final class KAssert
     }
 
     /**
-     * Compares two values for equality with null safety.
-     *
-     * @param left  the left value
-     * @param right the right value
-     * @return {@code true} when both values are equal
-     */
-    private static boolean areEqual(final Object left, final Object right)
-    {
-        return java.util.Objects.equals(left, right);
-    }
-
-    /**
      * Creates a failed assertion result and dispatches debug handlers when enabled.
      *
-     * @param <T> result value type
-     * @param value value associated with the failed result
+     * @param <T>     result value type
+     * @param value   value associated with the failed result
      * @param message failure message
      * @return failed assertion result
      */
@@ -232,9 +216,7 @@ public final class KAssert
         final RuntimeException error = createAssertionError(message);
         LOG.log(java.util.logging.Level.SEVERE, "Assertion failed: " + error.getMessage(), error);
         if (KAssertConfig.ENABLED)
-        {
             KFailureHandlerDispatcher.INSTANCE.dispatchDebugFailure(new KAssertionFailureContext(error));
-        }
         return new KFailed<T>(value, error);
     }
 
@@ -246,10 +228,7 @@ public final class KAssert
      */
     private static IllegalStateException createAssertionError(final String message)
     {
-        if (message == null)
-        {
-            return new IllegalStateException("Assertion failed (No context information provided)");
-        }
+        if (message == null) return new IllegalStateException("Assertion failed (No context information provided)");
         return new IllegalStateException(message);
     }
 }
