@@ -17,7 +17,7 @@ can remove assertion blocks in release mode.
 
 ```java
 if (com.kassert.KAssert.ENABLED) {
-    KAssert.kRequire(expensiveCheck(), "condition").throwIfFailed();
+    KAssert.kRequire(expensiveCheck(), () -> "condition").throwIfFailed();
 }
 ```
 
