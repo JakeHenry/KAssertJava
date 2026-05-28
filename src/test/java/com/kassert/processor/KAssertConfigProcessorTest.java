@@ -11,6 +11,11 @@ import org.junit.Test;
  */
 public class KAssertConfigProcessorTest
 {
+    /**
+     * Verifies generated source for release mode.
+     *
+     * @throws Exception if writing source fails
+     */
     @Test
     public void releaseModeGeneratedSourceTest() throws Exception
     {
@@ -22,6 +27,11 @@ public class KAssertConfigProcessorTest
         assertTrue(generated.contains("static final boolean ENABLED = false;"));
     }
 
+    /**
+     * Verifies generated source for debug mode.
+     *
+     * @throws Exception if writing source fails
+     */
     @Test
     public void debugModeGeneratedSourceTest() throws Exception
     {

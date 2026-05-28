@@ -80,28 +80,29 @@ public class KAssertTest
         }
     }
 
+    /**
+     * Verifies that supplementary handlers run when debug mode is enabled.
+     *
+     * @throws InterruptedException if waiting for handler completion is interrupted
+     */
     @Test
     public void supplementaryHandlerExecutes() throws InterruptedException
     {
-        boolean originalEnabled = KAssertConfig.ENABLED;
+        final boolean originalEnabled = KAssertConfig.ENABLED;
         try
         {
             KAssertConfig.setEnabledForTesting(true);
             final AtomicReference<Object> invocationFlag = new AtomicReference<>();
             final CountDownLatch handlerStartedLatch = new CountDownLatch(1);
-            final KAssertionFailureHandler testHandler = new KAssertionFailureHandler()
+            final KAssertionFailureHandler testHandler = context ->
             {
-                @Override
-                public void onFailure(KAssertionFailureContext context)
-                {
-                    assertNotNull(context);
-                    assertNotNull(context.assertionError());
-                    assertEquals("condition must be true", context.assertionError().getMessage());
-                    assertNotNull(context.threadName());
-                    assertTrue(context.threadId() > 0);
-                    invocationFlag.set(new Object());
-                    handlerStartedLatch.countDown();
-                }
+                assertNotNull(context);
+                assertNotNull(context.assertionError());
+                assertEquals("condition must be true", context.assertionError().getMessage());
+                assertNotNull(context.threadName());
+                assertTrue(context.threadId() > 0);
+                invocationFlag.set(new Object());
+                handlerStartedLatch.countDown();
             };
             KFailureHandlerDispatcher.INSTANCE.registerSupplementaryHandler(testHandler);
             try
@@ -123,23 +124,24 @@ public class KAssertTest
         }
     }
 
+    /**
+     * Verifies that supplementary handlers do not run when debug mode is disabled.
+     *
+     * @throws InterruptedException if waiting for handler completion is interrupted
+     */
     @Test
     public void supplementaryHandlerNotExecutedWhenDisabled() throws InterruptedException
     {
-        boolean originalEnabled = KAssertConfig.ENABLED;
+        final boolean originalEnabled = KAssertConfig.ENABLED;
         try
         {
             KAssertConfig.setEnabledForTesting(false);
             final AtomicReference<Object> invocationFlag = new AtomicReference<>();
             final CountDownLatch handlerStartedLatch = new CountDownLatch(1);
-            final KAssertionFailureHandler testHandler = new KAssertionFailureHandler()
+            final KAssertionFailureHandler testHandler = context ->
             {
-                @Override
-                public void onFailure(KAssertionFailureContext context)
-                {
-                    invocationFlag.set(new Object());
-                    handlerStartedLatch.countDown();
-                }
+                invocationFlag.set(new Object());
+                handlerStartedLatch.countDown();
             };
             KFailureHandlerDispatcher.INSTANCE.registerSupplementaryHandler(testHandler);
             try
@@ -161,6 +163,9 @@ public class KAssertTest
         }
     }
 
+    /**
+     * Verifies success and failure behavior of {@link KAssert#kRequire(boolean, String)}.
+     */
     @Test
     public void kRequireTest()
     {
@@ -190,6 +195,9 @@ public class KAssertTest
         assertFalse(failedResult.val());
     }
 
+    /**
+     * Verifies success and failure behavior of {@link KAssert#kRefuse(boolean, String)}.
+     */
     @Test
     public void kRefuseTest()
     {
@@ -219,6 +227,10 @@ public class KAssertTest
         assertFalse(failedResult.val());
     }
 
+    /**
+     * Verifies success and failure behavior of
+     * {@link KAssert#kRequireEquals(Object, Object, String)}.
+     */
     @Test
     public void kRequireEqualsTest()
     {

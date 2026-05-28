@@ -5,11 +5,20 @@ package com.kassert;
  */
 public final class KAssertionFailureContext
 {
+    /** Assertion exception raised by the failed assertion. */
     private final RuntimeException assertionError;
+    /** Failure timestamp in epoch milliseconds. */
     private final long timestampMillis;
+    /** Name of the thread that observed the failure. */
     private final String threadName;
+    /** Identifier of the thread that observed the failure. */
     private final long threadId;
 
+    /**
+     * Creates a new immutable assertion failure context.
+     *
+     * @param assertionError assertion exception raised by the failed assertion
+     */
     public KAssertionFailureContext(final RuntimeException assertionError)
     {
         if (assertionError == null)
@@ -24,21 +33,41 @@ public final class KAssertionFailureContext
         this.threadId = currentThread.getId();
     }
 
+    /**
+     * Gets the assertion exception raised by the failed assertion.
+     *
+     * @return assertion exception for this failure context
+     */
     public RuntimeException assertionError()
     {
         return assertionError;
     }
 
+    /**
+     * Gets the failure timestamp in epoch milliseconds.
+     *
+     * @return failure timestamp in milliseconds since epoch
+     */
     public long timestampMillis()
     {
         return timestampMillis;
     }
 
+    /**
+     * Gets the name of the thread that observed the failure.
+     *
+     * @return failure thread name
+     */
     public String threadName()
     {
         return threadName;
     }
 
+    /**
+     * Gets the id of the thread that observed the failure.
+     *
+     * @return failure thread id
+     */
     public long threadId()
     {
         return threadId;

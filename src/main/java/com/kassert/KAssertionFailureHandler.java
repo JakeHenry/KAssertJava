@@ -3,6 +3,7 @@ package com.kassert;
 /**
  * Handles a single assertion failure event.
  */
+@FunctionalInterface
 public interface KAssertionFailureHandler
 {
     /**

@@ -16,9 +16,17 @@ import javax.swing.JTextArea;
  */
 public final class KPopupDialogFailureHandler implements KAssertionFailureHandler
 {
+    /** Flag controlling whether headless assertion failures terminate the JVM. */
     private static final boolean CRASH_ON_HEADLESS_FAILURE = Boolean.getBoolean("kassert.cohf");
+    /** Logger for popup handling failures. */
     private static final Logger LOGGER = Logger.getLogger(KPopupDialogFailureHandler.class.getName());
 
+    /**
+     * Handles an assertion failure by showing a modal debug dialog.
+     *
+     * @param context assertion failure context
+     */
+    @Override
     public void onFailure(final KAssertionFailureContext context)
     {
         if (context == null) throw new IllegalArgumentException("context must not be null");
@@ -26,33 +34,28 @@ public final class KPopupDialogFailureHandler implements KAssertionFailureHandle
             throw new IllegalStateException("context.assertionError() must not be null");
         if (GraphicsEnvironment.isHeadless() && CRASH_ON_HEADLESS_FAILURE) System.exit(1);
 
-        final Runnable showDialog = new Runnable()
+        final Runnable showDialog = () ->
         {
-            @Override
-            public void run()
+            final RuntimeException error = context.assertionError();
+            final JTextArea area = new JTextArea(buildDialogText(context, error));
+            area.setEditable(false);
+            area.setLineWrap(false);
+            area.setCaretPosition(0);
+            final JScrollPane scrollPane = new JScrollPane(area);
+
+            final String[] options = { "Continue", "Exit JVM" };
+            final JOptionPane optionPane = new JOptionPane(scrollPane, JOptionPane.ERROR_MESSAGE,
+                    JOptionPane.DEFAULT_OPTION, null, options, options[0]);
+            final JDialog dialog = optionPane.createDialog(null, "KAssert Debug Assertion Failure");
+            dialog.setAlwaysOnTop(true);
+            dialog.setModal(true);
+            dialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
+            dialog.setVisible(true);
+
+            final Object selectedValue = optionPane.getValue();
+            if (options[1].equals(selectedValue))
             {
-                final RuntimeException error = context.assertionError();
-                final JTextArea area = new JTextArea(buildDialogText(context, error));
-                area.setEditable(false);
-                area.setLineWrap(false);
-                area.setCaretPosition(0);
-                final JScrollPane scrollPane = new JScrollPane(area);
-
-                final String[] options = new String[]
-                { "Continue", "Exit JVM" };
-                final JOptionPane optionPane = new JOptionPane(scrollPane, JOptionPane.ERROR_MESSAGE,
-                        JOptionPane.DEFAULT_OPTION, null, options, options[0]);
-                final JDialog dialog = optionPane.createDialog(null, "KAssert Debug Assertion Failure");
-                dialog.setAlwaysOnTop(true);
-                dialog.setModal(true);
-                dialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
-                dialog.setVisible(true);
-
-                final Object selectedValue = optionPane.getValue();
-                if (options[1].equals(selectedValue))
-                {
-                    System.exit(1);
-                }
+                System.exit(1);
             }
         };
         if (javax.swing.SwingUtilities.isEventDispatchThread())
@@ -77,8 +80,9 @@ public final class KPopupDialogFailureHandler implements KAssertionFailureHandle
      * Builds the text to be shown in the assertion failure dialog, including the
      * error message and stack trace.
      * 
-     * @param error The RuntimeException representing the assertion failure.
-     * @return A string containing the error message and stack trace formatted for
+     * @param context failure context metadata
+     * @param error the RuntimeException representing the assertion failure
+     * @return a string containing the error message and stack trace formatted for
      *         display in the dialog.
      */
     private String buildDialogText(final KAssertionFailureContext context, final RuntimeException error)
@@ -107,17 +111,21 @@ public final class KPopupDialogFailureHandler implements KAssertionFailureHandle
         builder.append('\n');
 
         final StackTraceElement[] stack = error.getStackTrace();
-        int i = 0;
-        while (i < stack.length)
+        for (final StackTraceElement element : stack)
         {
             builder.append("at ");
-            builder.append(stack[i].toString());
+            builder.append(element.toString());
             builder.append('\n');
-            i++;
         }
         return builder.toString();
     }
 
+    /**
+     * Formats a millisecond epoch timestamp for human-readable display.
+     *
+     * @param timestampMillis timestamp in epoch milliseconds
+     * @return formatted timestamp string
+     */
     private String formatTimestamp(final long timestampMillis)
     {
         return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date(timestampMillis));

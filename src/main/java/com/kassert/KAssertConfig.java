@@ -9,16 +9,26 @@ package com.kassert;
  */
 final class KAssertConfig
 {
+    /** Logger for configuration diagnostics. */
     private static final java.util.logging.Logger LOGGER = java.util.logging.Logger
             .getLogger(KAssertConfig.class.getName());
 
+    /** Mutable enablement flag used by library code and tests. */
     static volatile boolean ENABLED = getEnabled();
 
+    /**
+     * Prevents instantiation of this utility class.
+     */
     private KAssertConfig()
     {
         // prevent instantiation
     }
 
+    /**
+     * Resolves the default enablement state for this fallback configuration.
+     *
+     * @return {@code false}, indicating assertions are disabled by default
+     */
     private static boolean getEnabled()
     {
         LOGGER.log(java.util.logging.Level.SEVERE, "Default KAssertConfig is being used. Enabled = " + ENABLED

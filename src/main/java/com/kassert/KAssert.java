@@ -23,6 +23,7 @@ import com.kassert.ex.KResult;
  */
 public final class KAssert
 {
+    /** Logger used for assertion failure diagnostics. */
     private static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger(KAssert.class.getName());
 
     /**
@@ -215,17 +216,17 @@ public final class KAssert
      */
     private static boolean areEqual(final Object left, final Object right)
     {
-        if (left == right)
-        {
-            return true;
-        }
-        if (left == null)
-        {
-            return false;
-        }
-        return left.equals(right);
+        return java.util.Objects.equals(left, right);
     }
 
+    /**
+     * Creates a failed assertion result and dispatches debug handlers when enabled.
+     *
+     * @param <T> result value type
+     * @param value value associated with the failed result
+     * @param message failure message
+     * @return failed assertion result
+     */
     private static <T> KResult<T> failedResult(final T value, final String message)
     {
         final RuntimeException error = createAssertionError(message);

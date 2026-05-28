@@ -28,16 +28,25 @@ import javax.tools.JavaFileObject;
  * </ul>
  */
 @SupportedAnnotationTypes("*")
-@SupportedSourceVersion(SourceVersion.RELEASE_6)
+@SupportedSourceVersion(SourceVersion.RELEASE_8)
 @SupportedOptions(
 { "kassert.enabled", "kassert.className" })
 public final class KAssertConfigProcessor extends AbstractProcessor
 {
+    /** Processor option key for the enabled flag. */
     private static final String OPTION_ENABLED = "kassert.enabled";
+    /** Default enabled option value. */
     private static final String DEFAULT_ENABLED = "false";
+    /** Fully qualified generated class name. */
     private static final String DEFAULT_CLASS_NAME = "com.kassert.KAssertConfig";
+    /** Tracks whether generation has already happened for this compilation. */
     private boolean generated;
 
+    /**
+     * Initializes processor state for a new compilation.
+     *
+     * @param processingEnv annotation processing environment
+     */
     @Override
     public synchronized void init(final ProcessingEnvironment processingEnv)
     {
@@ -45,6 +54,14 @@ public final class KAssertConfigProcessor extends AbstractProcessor
         generated = false;
     }
 
+    /**
+     * Generates the {@code com.kassert.KAssertConfig} source file once per
+     * compilation.
+     *
+     * @param annotations annotation types requested for processing
+     * @param roundEnv current processing round environment
+     * @return {@code false} to allow other processors to process annotations
+     */
     @Override
     public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv)
     {
@@ -54,12 +71,13 @@ public final class KAssertConfigProcessor extends AbstractProcessor
         }
 
         final boolean enabled = Boolean.parseBoolean(getOptionOrDefault(OPTION_ENABLED, DEFAULT_ENABLED));
-        Writer writer = null;
         try
         {
             final JavaFileObject sourceFile = processingEnv.getFiler().createSourceFile(DEFAULT_CLASS_NAME);
-            writer = sourceFile.openWriter();
-            writeSource(writer, enabled);
+            try (Writer writer = sourceFile.openWriter())
+            {
+                writeSource(writer, enabled);
+            }
             generated = true;
         }
         catch (FilerException ignored)
@@ -70,14 +88,18 @@ public final class KAssertConfigProcessor extends AbstractProcessor
         {
             processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
                     "Failed to generate " + DEFAULT_CLASS_NAME + ": " + error.getMessage());
-        } finally
-        {
-            closeQuietly(writer);
         }
 
         return false;
     }
 
+    /**
+     * Writes the source code for the generated configuration class.
+     *
+     * @param writer destination writer
+     * @param enabled generated enabled constant value
+     * @throws IOException when writing fails
+     */
     static void writeSource(final Writer writer, final boolean enabled) throws IOException
     {
         final String source = String.format(
@@ -94,6 +116,13 @@ public final class KAssertConfigProcessor extends AbstractProcessor
         writer.write(source);
     }
 
+    /**
+     * Gets a processor option value and falls back when absent.
+     *
+     * @param key processor option key
+     * @param fallback fallback value when the option is unset
+     * @return option value or fallback
+     */
     private String getOptionOrDefault(final String key, final String fallback)
     {
         final String value = processingEnv.getOptions().get(key);
@@ -102,21 +131,5 @@ public final class KAssertConfigProcessor extends AbstractProcessor
             return fallback;
         }
         return value.trim();
-    }
-
-    private static void closeQuietly(final Writer writer)
-    {
-        if (writer == null)
-        {
-            return;
-        }
-        try
-        {
-            writer.close();
-        }
-        catch (IOException ignored)
-        {
-            // no action required
-        }
     }
 }

@@ -1,5 +1,10 @@
 package com.kassert.ex;
 
+/**
+ * Base result type returned by KAssert operations.
+ *
+ * @param <T> value type carried by the result
+ */
 public class KResult<T>
 {
     /**
@@ -18,7 +23,7 @@ public class KResult<T>
      * 
      * @param val the value associated with this result
      */
-    public KResult(T val)
+    public KResult(final T val)
     {
         this(val, null);
     }
@@ -29,7 +34,7 @@ public class KResult<T>
      * @param val the value associated with this result
      * @param failureException the failure exception captured at assertion time
      */
-    public KResult(T val, RuntimeException failureException)
+    public KResult(final T val, final RuntimeException failureException)
     {
         this.val = val;
         this.failureException = failureException;

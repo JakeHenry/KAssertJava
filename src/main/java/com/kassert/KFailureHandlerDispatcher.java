@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -101,7 +100,7 @@ public final class KFailureHandlerDispatcher
 
     /**
      * Schedules the given handler to run with the given context, catching and
-     * logging any exceptions thrown by the
+     * logging any exceptions thrown by the handler.
      * 
      * @param handler the handler to schedule
      * @param context the context to pass to the handler when it runs
@@ -111,18 +110,15 @@ public final class KFailureHandlerDispatcher
     {
         try
         {
-            supplementaryExecutor.execute(new Runnable()
+            supplementaryExecutor.execute(() ->
             {
-                public void run()
+                try
                 {
-                    try
-                    {
-                        handler.onFailure(context);
-                    }
-                    catch (RuntimeException error)
-                    {
-                        LOGGER.log(Level.SEVERE, "Supplementary assertion failure handler threw an exception.", error);
-                    }
+                    handler.onFailure(context);
+                }
+                catch (RuntimeException error)
+                {
+                    LOGGER.log(Level.SEVERE, "Supplementary assertion failure handler threw an exception.", error);
                 }
             });
         }
@@ -140,15 +136,11 @@ public final class KFailureHandlerDispatcher
     private static Executor createDefaultExecutor()
     {
         final AtomicInteger threadCounter = new AtomicInteger(1);
-        return Executors.newCachedThreadPool(new ThreadFactory()
+        return Executors.newCachedThreadPool(runnable ->
         {
-            public Thread newThread(final Runnable runnable)
-            {
-                final Thread worker = new Thread(runnable,
-                        "kassert-failure-handler-" + threadCounter.getAndIncrement());
-                worker.setDaemon(true);
-                return worker;
-            }
+            final Thread worker = new Thread(runnable, "kassert-failure-handler-" + threadCounter.getAndIncrement());
+            worker.setDaemon(true);
+            return worker;
         });
     }
 }
