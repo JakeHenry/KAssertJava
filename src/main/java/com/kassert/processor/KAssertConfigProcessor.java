@@ -23,14 +23,12 @@ import javax.tools.JavaFileObject;
  * Supported options:
  * <ul>
  * <li>{@code kassert.enabled} (default: {@code false})</li>
- * <li>{@code kassert.className} (default:
- * {@code com.kassert.KAssertConfig})</li>
  * </ul>
  */
 @SupportedAnnotationTypes("*")
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 @SupportedOptions(
-{ "kassert.enabled", "kassert.className" })
+{ "kassert.enabled" })
 public final class KAssertConfigProcessor extends AbstractProcessor
 {
     /** Processor option key for the enabled flag. */
@@ -59,7 +57,7 @@ public final class KAssertConfigProcessor extends AbstractProcessor
      * compilation.
      *
      * @param annotations annotation types requested for processing
-     * @param roundEnv current processing round environment
+     * @param roundEnv    current processing round environment
      * @return {@code false} to allow other processors to process annotations
      */
     @Override
@@ -96,30 +94,22 @@ public final class KAssertConfigProcessor extends AbstractProcessor
     /**
      * Writes the source code for the generated configuration class.
      *
-     * @param writer destination writer
+     * @param writer  destination writer
      * @param enabled generated enabled constant value
      * @throws IOException when writing fails
      */
     static void writeSource(final Writer writer, final boolean enabled) throws IOException
     {
-        final String source = String.format(
-            "package com.kassert;%n"
-          + "final class KAssertConfig%n"
-          + "{%n"
-          + "    static final boolean ENABLED = %b;%n"
-          + "    private KAssertConfig()%n"
-          + "    {%n"
-          + "        // prevent instantiation%n"
-          + "    }%n"
-          + "}%n",
-            enabled);
+        final String source = String.format("package com.kassert;%n" + "final class KAssertConfig%n" + "{%n"
+                + "    static final boolean ENABLED = %b;%n" + "    private KAssertConfig()%n" + "    {%n"
+                + "        // prevent instantiation%n" + "    }%n" + "}%n", enabled);
         writer.write(source);
     }
 
     /**
      * Gets a processor option value and falls back when absent.
      *
-     * @param key processor option key
+     * @param key      processor option key
      * @param fallback fallback value when the option is unset
      * @return option value or fallback
      */

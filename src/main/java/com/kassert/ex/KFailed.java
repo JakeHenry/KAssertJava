@@ -8,16 +8,6 @@ package com.kassert.ex;
 public class KFailed<T> extends KResult<T>
 {
     /**
-     * Creates a failed result with no explicit failure exception.
-     *
-     * @param result failed result value
-     */
-    public KFailed(final T result)
-    {
-        super(result);
-    }
-
-    /**
      * Creates a failed result with the captured assertion exception.
      *
      * @param result failed result value
