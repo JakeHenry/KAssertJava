@@ -75,7 +75,7 @@ public final class KFailureHandlerDispatcher
         Objects.requireNonNull(context, "context must not be null");
 
         final List<KAssertionFailureHandler> handlersToRun = getSupplementaryHandlersSnapshot();
-        final List<Thread> supplementaryHandlerThreads = new ArrayList<>();
+        final List<Thread> supplementaryHandlerThreads = new ArrayList<>(handlersToRun.size());
         for (KAssertionFailureHandler handler : handlersToRun)
         {
             if (handler == null) continue;
