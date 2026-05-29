@@ -41,23 +41,23 @@ public class KAssertTest
         final KResult<String> notInstanceResult = KAssert.kRefuseInstanceOf(Number.class, "notInstanceValue",
                 () -> "notInstanceOf");
 
-        assertTrue(refuseResult.passes());
+        assertTrue(refuseResult.ok());
         assertEquals(Boolean.TRUE, refuseResult.val());
-        assertTrue(equalsResult.passes());
+        assertTrue(equalsResult.ok());
         assertEquals("expected", equalsResult.val());
-        assertTrue(sameResult.passes());
+        assertTrue(sameResult.ok());
         assertEquals("sameExpected", sameResult.val());
-        assertTrue(notEqualsResult.passes());
+        assertTrue(notEqualsResult.ok());
         assertEquals("actual", notEqualsResult.val());
-        assertTrue(notSameResult.passes());
+        assertTrue(notSameResult.ok());
         assertEquals("notSameActual", notSameResult.val());
-        assertTrue(nullResult.passes());
+        assertTrue(nullResult.ok());
         assertNull(nullResult.val());
-        assertTrue(notNullResult.passes());
+        assertTrue(notNullResult.ok());
         assertEquals("notNull", notNullResult.val());
-        assertTrue(instanceOfResult.passes());
+        assertTrue(instanceOfResult.ok());
         assertEquals("instanceValue", instanceOfResult.val());
-        assertTrue(notInstanceResult.passes());
+        assertTrue(notInstanceResult.ok());
         assertEquals("notInstanceValue", notInstanceResult.val());
     }
 
@@ -69,7 +69,7 @@ public class KAssertTest
     {
         try
         {
-            KAssert.kRequire(false, () -> "condition must be true").throwIfFailed();
+            KAssert.kRequire(false, () -> "condition must be true").throwIfErr();
             fail("Expected runtime exception from throwIfFailed");
         }
         catch (RuntimeException error)
@@ -96,7 +96,7 @@ public class KAssertTest
             return "should not be used";
         });
 
-        assertTrue(result.passes());
+        assertTrue(result.ok());
         assertFalse(supplierCalled.get());
     }
 
@@ -108,6 +108,8 @@ public class KAssertTest
     @Test
     public void supplementaryHandlerExecutes() throws InterruptedException
     {
+        assertFalse(KAssertConfig.ENABLED);
+        assertFalse(KAssert.ENABLED);
         final boolean originalEnabled = KAssertConfig.ENABLED;
         try
         {
@@ -117,8 +119,8 @@ public class KAssertTest
             final KAssertionFailureHandler testHandler = context ->
             {
                 assertNotNull(context);
-                assertNotNull(context.assertionError());
-                assertEquals("condition must be true", context.assertionError().getMessage());
+                assertNotNull(context.err());
+                assertEquals("condition must be true", context.err().getMessage());
                 assertNotNull(context.threadName());
                 assertTrue(context.threadId() > 0);
                 invocationFlag.set(new Object());
@@ -127,7 +129,7 @@ public class KAssertTest
             KFailureHandlerDispatcher.INSTANCE.registerSupplementaryHandler(testHandler);
             try
             {
-                KAssert.kRequire(false, () -> "condition must be true").throwIfFailed();
+                KAssert.kRequire(false, () -> "condition must be true").throwIfErr();
                 fail("Expected runtime exception from throwIfFailed");
             }
             catch (RuntimeException error)
@@ -152,6 +154,8 @@ public class KAssertTest
     @Test
     public void supplementaryHandlerNotExecutedWhenDisabled() throws InterruptedException
     {
+        assertFalse(KAssertConfig.ENABLED);
+        assertFalse(KAssert.ENABLED);
         final boolean originalEnabled = KAssertConfig.ENABLED;
         try
         {
@@ -166,7 +170,7 @@ public class KAssertTest
             KFailureHandlerDispatcher.INSTANCE.registerSupplementaryHandler(testHandler);
             try
             {
-                KAssert.kRequire(false, () -> "condition must be true").throwIfFailed();
+                KAssert.kRequire(false, () -> "condition must be true").throwIfErr();
                 fail("Expected runtime exception from throwIfFailed");
             }
             catch (RuntimeException error)
@@ -191,16 +195,16 @@ public class KAssertTest
     public void kRequireTest()
     {
         final KResult<Boolean> result = KAssert.kRequire(true, () -> "condition must be true");
-        assertTrue(result.throwIfFailed().passes());
-        assertTrue(result.passes());
-        assertFalse(result.fails());
+        assertTrue(result.throwIfErr().ok());
+        assertTrue(result.ok());
+        assertFalse(result.err());
         assertEquals(Boolean.TRUE, result.val());
         assertTrue(result.val());
 
         final KResult<Boolean> failedResult = KAssert.kRequire(false, () -> "condition must be true");
         try
         {
-            failedResult.throwIfFailed();
+            failedResult.throwIfErr();
             fail("Expected runtime exception from throwIfFailed");
         }
         catch (RuntimeException error)
@@ -210,8 +214,8 @@ public class KAssertTest
             assertTrue(error.getStackTrace().length > 0);
             assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
         }
-        assertFalse(failedResult.passes());
-        assertTrue(failedResult.fails());
+        assertFalse(failedResult.ok());
+        assertTrue(failedResult.err());
         assertEquals(Boolean.FALSE, failedResult.val());
         assertFalse(failedResult.val());
     }
@@ -224,16 +228,16 @@ public class KAssertTest
     public void kRefuseTest()
     {
         final KResult<Boolean> result = KAssert.kRefuse(false, () -> "condition must be false");
-        assertTrue(result.throwIfFailed().passes());
-        assertTrue(result.passes());
-        assertFalse(result.fails());
+        assertTrue(result.throwIfErr().ok());
+        assertTrue(result.ok());
+        assertFalse(result.err());
         assertEquals(Boolean.TRUE, result.val());
         assertTrue(result.val());
 
         final KResult<Boolean> failedResult = KAssert.kRefuse(true, () -> "condition must be false");
         try
         {
-            failedResult.throwIfFailed();
+            failedResult.throwIfErr();
             fail("Expected runtime exception from throwIfFailed");
         }
         catch (RuntimeException error)
@@ -243,8 +247,8 @@ public class KAssertTest
             assertTrue(error.getStackTrace().length > 0);
             assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
         }
-        assertFalse(failedResult.passes());
-        assertTrue(failedResult.fails());
+        assertFalse(failedResult.ok());
+        assertTrue(failedResult.err());
         assertEquals(Boolean.FALSE, failedResult.val());
         assertFalse(failedResult.val());
     }
@@ -257,15 +261,15 @@ public class KAssertTest
     public void kRequireEqualsTest()
     {
         final KResult<String> result = KAssert.kRequireEquals("expected", "expected", () -> "values must be equal");
-        assertTrue(result.throwIfFailed().passes());
-        assertTrue(result.passes());
-        assertFalse(result.fails());
+        assertTrue(result.throwIfErr().ok());
+        assertTrue(result.ok());
+        assertFalse(result.err());
         assertEquals("expected", result.val());
 
         final KResult<String> failedResult = KAssert.kRequireEquals("expected", "actual", () -> "values must be equal");
         try
         {
-            failedResult.throwIfFailed();
+            failedResult.throwIfErr();
             fail("Expected runtime exception from throwIfFailed");
         }
         catch (RuntimeException error)
@@ -275,8 +279,8 @@ public class KAssertTest
             assertTrue(error.getStackTrace().length > 0);
             assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
         }
-        assertFalse(failedResult.passes());
-        assertTrue(failedResult.fails());
+        assertFalse(failedResult.ok());
+        assertTrue(failedResult.err());
         assertEquals("actual", failedResult.val());
     }
 
@@ -288,15 +292,15 @@ public class KAssertTest
     public void kRefuseEqualsTest()
     {
         final KResult<String> result = KAssert.kRefuseEquals("expected", "actual", () -> "values must differ");
-        assertTrue(result.throwIfFailed().passes());
-        assertTrue(result.passes());
-        assertFalse(result.fails());
+        assertTrue(result.throwIfErr().ok());
+        assertTrue(result.ok());
+        assertFalse(result.err());
         assertEquals("actual", result.val());
 
         final KResult<String> failedResult = KAssert.kRefuseEquals("same", "same", () -> "values must differ");
         try
         {
-            failedResult.throwIfFailed();
+            failedResult.throwIfErr();
             fail("Expected runtime exception from throwIfFailed");
         }
         catch (RuntimeException error)
@@ -306,8 +310,8 @@ public class KAssertTest
             assertTrue(error.getStackTrace().length > 0);
             assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
         }
-        assertFalse(failedResult.passes());
-        assertTrue(failedResult.fails());
+        assertFalse(failedResult.ok());
+        assertTrue(failedResult.err());
         assertEquals("same", failedResult.val());
     }
 
@@ -320,9 +324,9 @@ public class KAssertTest
     {
         final Object shared = new Object();
         final KResult<Object> result = KAssert.kRequireSame(shared, shared, () -> "references must match");
-        assertTrue(result.throwIfFailed().passes());
-        assertTrue(result.passes());
-        assertFalse(result.fails());
+        assertTrue(result.throwIfErr().ok());
+        assertTrue(result.ok());
+        assertFalse(result.err());
         assertTrue(shared == result.val());
 
         final Object expected = new Object();
@@ -330,7 +334,7 @@ public class KAssertTest
         final KResult<Object> failedResult = KAssert.kRequireSame(expected, actual, () -> "references must match");
         try
         {
-            failedResult.throwIfFailed();
+            failedResult.throwIfErr();
             fail("Expected runtime exception from throwIfFailed");
         }
         catch (RuntimeException error)
@@ -340,8 +344,8 @@ public class KAssertTest
             assertTrue(error.getStackTrace().length > 0);
             assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
         }
-        assertFalse(failedResult.passes());
-        assertTrue(failedResult.fails());
+        assertFalse(failedResult.ok());
+        assertTrue(failedResult.err());
         assertTrue(actual == failedResult.val());
     }
 
@@ -355,16 +359,16 @@ public class KAssertTest
         final Object left = new Object();
         final Object right = new Object();
         final KResult<Object> result = KAssert.kRefuseSame(left, right, () -> "references must differ");
-        assertTrue(result.throwIfFailed().passes());
-        assertTrue(result.passes());
-        assertFalse(result.fails());
+        assertTrue(result.throwIfErr().ok());
+        assertTrue(result.ok());
+        assertFalse(result.err());
         assertTrue(right == result.val());
 
         final Object shared = new Object();
         final KResult<Object> failedResult = KAssert.kRefuseSame(shared, shared, () -> "references must differ");
         try
         {
-            failedResult.throwIfFailed();
+            failedResult.throwIfErr();
             fail("Expected runtime exception from throwIfFailed");
         }
         catch (RuntimeException error)
@@ -374,8 +378,8 @@ public class KAssertTest
             assertTrue(error.getStackTrace().length > 0);
             assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
         }
-        assertFalse(failedResult.passes());
-        assertTrue(failedResult.fails());
+        assertFalse(failedResult.ok());
+        assertTrue(failedResult.err());
         assertTrue(shared == failedResult.val());
     }
 
@@ -387,16 +391,16 @@ public class KAssertTest
     public void kRequireNullTest()
     {
         final KResult<Object> result = KAssert.kRequireNull(null, () -> "value must be null");
-        assertTrue(result.throwIfFailed().passes());
-        assertTrue(result.passes());
-        assertFalse(result.fails());
+        assertTrue(result.throwIfErr().ok());
+        assertTrue(result.ok());
+        assertFalse(result.err());
         assertNull(result.val());
 
         final Object value = new Object();
         final KResult<Object> failedResult = KAssert.kRequireNull(value, () -> "value must be null");
         try
         {
-            failedResult.throwIfFailed();
+            failedResult.throwIfErr();
             fail("Expected runtime exception from throwIfFailed");
         }
         catch (RuntimeException error)
@@ -406,8 +410,8 @@ public class KAssertTest
             assertTrue(error.getStackTrace().length > 0);
             assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
         }
-        assertFalse(failedResult.passes());
-        assertTrue(failedResult.fails());
+        assertFalse(failedResult.ok());
+        assertTrue(failedResult.err());
         assertTrue(value == failedResult.val());
     }
 
@@ -420,15 +424,15 @@ public class KAssertTest
     {
         final String value = "present";
         final KResult<String> result = KAssert.kRefuseNull(value, () -> "value must not be null");
-        assertTrue(result.throwIfFailed().passes());
-        assertTrue(result.passes());
-        assertFalse(result.fails());
+        assertTrue(result.throwIfErr().ok());
+        assertTrue(result.ok());
+        assertFalse(result.err());
         assertEquals("present", result.val());
 
         final KResult<Object> failedResult = KAssert.kRefuseNull(null, () -> "value must not be null");
         try
         {
-            failedResult.throwIfFailed();
+            failedResult.throwIfErr();
             fail("Expected runtime exception from throwIfFailed");
         }
         catch (RuntimeException error)
@@ -438,8 +442,8 @@ public class KAssertTest
             assertTrue(error.getStackTrace().length > 0);
             assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
         }
-        assertFalse(failedResult.passes());
-        assertTrue(failedResult.fails());
+        assertFalse(failedResult.ok());
+        assertTrue(failedResult.err());
         assertNull(failedResult.val());
     }
 
@@ -452,16 +456,16 @@ public class KAssertTest
     {
         final Integer number = Integer.valueOf(42);
         final KResult<Integer> result = KAssert.kRequireInstanceOf(Number.class, number, () -> "value must be Number");
-        assertTrue(result.throwIfFailed().passes());
-        assertTrue(result.passes());
-        assertFalse(result.fails());
+        assertTrue(result.throwIfErr().ok());
+        assertTrue(result.ok());
+        assertFalse(result.err());
         assertEquals(Integer.valueOf(42), result.val());
 
         final KResult<String> failedTypeResult = KAssert.kRequireInstanceOf(Number.class, "text",
                 () -> "value must be Number");
         try
         {
-            failedTypeResult.throwIfFailed();
+            failedTypeResult.throwIfErr();
             fail("Expected runtime exception from throwIfFailed");
         }
         catch (RuntimeException error)
@@ -471,15 +475,15 @@ public class KAssertTest
             assertTrue(error.getStackTrace().length > 0);
             assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
         }
-        assertFalse(failedTypeResult.passes());
-        assertTrue(failedTypeResult.fails());
+        assertFalse(failedTypeResult.ok());
+        assertTrue(failedTypeResult.err());
         assertEquals("text", failedTypeResult.val());
 
         final KResult<String> failedNullTypeResult = KAssert.kRequireInstanceOf(null, "text",
                 () -> "value must be Number");
         try
         {
-            failedNullTypeResult.throwIfFailed();
+            failedNullTypeResult.throwIfErr();
             fail("Expected runtime exception from throwIfFailed");
         }
         catch (RuntimeException error)
@@ -489,8 +493,8 @@ public class KAssertTest
             assertTrue(error.getStackTrace().length > 0);
             assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
         }
-        assertFalse(failedNullTypeResult.passes());
-        assertTrue(failedNullTypeResult.fails());
+        assertFalse(failedNullTypeResult.ok());
+        assertTrue(failedNullTypeResult.err());
         assertEquals("text", failedNullTypeResult.val());
     }
 
@@ -503,16 +507,16 @@ public class KAssertTest
     {
         final String value = "text";
         final KResult<String> result = KAssert.kRefuseInstanceOf(Number.class, value, () -> "value must not be Number");
-        assertTrue(result.throwIfFailed().passes());
-        assertTrue(result.passes());
-        assertFalse(result.fails());
+        assertTrue(result.throwIfErr().ok());
+        assertTrue(result.ok());
+        assertFalse(result.err());
         assertEquals("text", result.val());
 
         final KResult<String> failedTypeResult = KAssert.kRefuseInstanceOf(String.class, value,
                 () -> "value must not be String");
         try
         {
-            failedTypeResult.throwIfFailed();
+            failedTypeResult.throwIfErr();
             fail("Expected runtime exception from throwIfFailed");
         }
         catch (RuntimeException error)
@@ -522,15 +526,15 @@ public class KAssertTest
             assertTrue(error.getStackTrace().length > 0);
             assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
         }
-        assertFalse(failedTypeResult.passes());
-        assertTrue(failedTypeResult.fails());
+        assertFalse(failedTypeResult.ok());
+        assertTrue(failedTypeResult.err());
         assertEquals("text", failedTypeResult.val());
 
         final KResult<String> failedNullTypeResult = KAssert.kRefuseInstanceOf(null, value,
                 () -> "value must not be String");
         try
         {
-            failedNullTypeResult.throwIfFailed();
+            failedNullTypeResult.throwIfErr();
             fail("Expected runtime exception from throwIfFailed");
         }
         catch (RuntimeException error)
@@ -540,8 +544,8 @@ public class KAssertTest
             assertTrue(error.getStackTrace().length > 0);
             assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
         }
-        assertFalse(failedNullTypeResult.passes());
-        assertTrue(failedNullTypeResult.fails());
+        assertFalse(failedNullTypeResult.ok());
+        assertTrue(failedNullTypeResult.err());
         assertEquals("text", failedNullTypeResult.val());
     }
 }

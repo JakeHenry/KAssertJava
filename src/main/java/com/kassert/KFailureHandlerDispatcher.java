@@ -8,6 +8,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.swing.JOptionPane;
+
 /**
  * Coordinates supplementary failure handlers and the built-in popup handler.
  * 
@@ -44,12 +46,12 @@ public final class KFailureHandlerDispatcher
     private KFailureHandlerDispatcher()
     {
         supplementaryHandlers = new ArrayList<KAssertionFailureHandler>();
-        popupHandler = new KPopupDialogFailureHandler();
+        popupHandler = new KPopupDialogFailureHandler(JOptionPane.ERROR_MESSAGE, "Assertion Failure");
     }
 
     /**
      * Registers a supplementary failure handler to be invoked on assertion failures
-     * in debug mode. Supplementary handlers are invoked before the built-in popup
+     * in debug mode. Supplementary handlers are invoked before the built-in popup`
      * handler, and exceptions thrown by supplementary handlers are caught and
      * logged, but do not prevent the popup handler from being invoked.
      * 

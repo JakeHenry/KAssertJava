@@ -1,5 +1,7 @@
 package com.kassert.ex;
 
+import java.util.function.Consumer;
+
 /**
  * Base result type returned by KAssert operations.
  *
@@ -14,7 +16,8 @@ public class KResult<T>
     protected T val;
 
     /**
-     * The failure exception created by an implementation when this result is failed.
+     * The failure exception created by an implementation when this result is
+     * failed.
      */
     protected RuntimeException failureException;
 
@@ -31,13 +34,43 @@ public class KResult<T>
     /**
      * Initializes a new result with the specified value and failure exception.
      *
-     * @param val the value associated with this result
+     * @param val              the value associated with this result
      * @param failureException the failure exception captured at assertion time
      */
     public KResult(final T val, final RuntimeException failureException)
     {
         this.val = val;
         this.failureException = failureException;
+    }
+
+    /**
+     * Executes the provided error handler if this result represents a failure.
+     *
+     * @param errHandler the error handler to execute
+     * @return this result for chaining
+     */
+    public KResult<T> onErr(final Consumer<RuntimeException> errHandler)
+    {
+        if (err() && failureException != null)
+        {
+            errHandler.accept(failureException);
+        }
+        return this;
+    }
+
+    /**
+     * Executes the provided success handler if this result represents a success.
+     *
+     * @param okHandler the success handler to execute
+     * @return this result for chaining
+     */
+    public KResult<T> onOk(final Consumer<T> okHandler)
+    {
+        if (ok())
+        {
+            okHandler.accept(val);
+        }
+        return this;
     }
 
     /**
@@ -55,7 +88,7 @@ public class KResult<T>
      * 
      * @return {@code true} when this result is a success
      */
-    public boolean passes()
+    public boolean ok()
     {
         return this instanceof KSuccess;
     }
@@ -65,7 +98,7 @@ public class KResult<T>
      * 
      * @return {@code true} when this result is a failure
      */
-    public boolean fails()
+    public boolean err()
     {
         return this instanceof KFailed;
     }
@@ -76,9 +109,9 @@ public class KResult<T>
      * @return this result for chaining
      * @throws RuntimeException when this result is a failure
      */
-    public KResult<T> throwIfFailed() throws RuntimeException
+    public KResult<T> throwIfErr() throws RuntimeException
     {
-        if (fails())
+        if (err())
         {
             if (failureException != null)
             {

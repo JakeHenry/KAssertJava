@@ -1,7 +1,11 @@
 package com.kassert;
 
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+import java.util.logging.Level;
+
+import javax.swing.JOptionPane;
 
 import com.kassert.ex.KFailed;
 import com.kassert.ex.KResult;
@@ -10,24 +14,34 @@ import com.kassert.ex.KSuccess;
 /**
  * Facade entry point for KAssert require operations.
  *
- * <p> KAssert provides runtime assertion methods. For client-side compile-time
+ * <p>
+ * KAssert provides runtime assertion methods. For client-side compile-time
  * elimination, use the generated constant {@code
  * com.kassert.KAssertConfig.ENABLED} (created by the included annotation
  * processor).
  *
- * <p> Consumers should guard assertion calls for zero-overhead elimination in
+ * <p>
+ * Consumers should guard assertion calls for zero-overhead elimination in
  * release builds:
  * 
- * <pre>{@code if (com.kassert.KAssertConfig.ENABLED) {
- * KAssert.kRequire(condition, () -> "message").throwIfFailed(); } }</pre>
+ * <pre>{@code
+ * if (com.kassert.KAssertConfig.ENABLED)
+ * {
+ *     KAssert.kRequire(condition, () -> "message").throwIfFailed();
+ * }
+ * }</pre>
  *
- * <p> When the generated client flag is {@code false}, the Java compiler
- * eliminates guarded blocks entirely from bytecode via dead code elimination.
+ * <p>
+ * When the generated client flag is {@code false}, the Java compiler eliminates
+ * guarded blocks entirely from bytecode via dead code elimination.
  */
 public final class KAssert
 {
     /** Logger used for assertion failure diagnostics. */
     private static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger(KAssert.class.getName());
+
+    /** Flag to control logging of assertion failures. */
+    private static final boolean LOG_FAILURES = Boolean.parseBoolean(System.getProperty("kassert.logFailures", "true"));
 
     /**
      * Compile-time conditional compilation flag. This references
@@ -39,22 +53,21 @@ public final class KAssert
     static
     {
         boolean assertionsEnabled = false;
-        assert assertionsEnabled = true; // Intentional side effect to detect if assertions are enabled
-        if (assertionsEnabled && !ENABLED)
+        assert assertionsEnabled = true; // Intentional side effect
+        if (assertionsEnabled != ENABLED)
         {
-            LOG.severe("Assertions are enabled but KAssert is disabled.");
-            new KPopupDialogFailureHandler().onFailure(new KAssertionFailureContext(
-                    new IllegalStateException("Assertions are enabled but KAssert is disabled.")));
-        }
-        else if (ENABLED)
-        {
-            LOG.severe("KAssert is enabled, but assertions are not enabled.");
-            new KPopupDialogFailureHandler().onFailure(new KAssertionFailureContext(
-                    new IllegalStateException("KAssert is enabled, but assertions are not enabled.")));
+            final IllegalStateException configException = new IllegalStateException(String.format(
+                    "KAssert is misconfigured: assertionsEnabled=%b, KAssertConfig.ENABLED=%b. "
+                            + "This may be due to missing annotation processing in the client build.",
+                    assertionsEnabled, ENABLED));
+            LOG.log(Level.SEVERE, "KAssert misuse detected!", configException);
+            final KPopupDialogFailureHandler kPopupDialogFailureHandler = new KPopupDialogFailureHandler(
+                    JOptionPane.WARNING_MESSAGE, "KAssert Misconfiguration", TimeUnit.SECONDS.toMillis(30));
+            kPopupDialogFailureHandler.onFailure(new KAssertionFailureContext(configException));
         }
     }
 
-    /**
+    /**k
      * Prevents instantiation of this utility class.
      */
     private KAssert()
@@ -239,9 +252,14 @@ public final class KAssert
     private static <T> KResult<T> failedResult(final T value, final Supplier<String> messageSupplier)
     {
         final RuntimeException error = createAssertionError(messageSupplier);
-        LOG.log(java.util.logging.Level.SEVERE, "Assertion failed: " + error.getMessage(), error);
+        if (LOG_FAILURES)
+        {
+            LOG.log(java.util.logging.Level.SEVERE, "Assertion failed: " + error.getMessage(), error);
+        }
         if (KAssertConfig.ENABLED)
+        {
             KFailureHandlerDispatcher.INSTANCE.dispatchDebugFailure(new KAssertionFailureContext(error));
+        }
         return new KFailed<T>(value, error);
     }
 

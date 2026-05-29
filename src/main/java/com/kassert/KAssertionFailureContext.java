@@ -37,7 +37,7 @@ public final class KAssertionFailureContext
      *
      * @return assertion exception for this failure context
      */
-    public RuntimeException assertionError()
+    public RuntimeException err()
     {
         return assertionError;
     }
