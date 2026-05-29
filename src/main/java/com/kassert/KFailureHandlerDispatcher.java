@@ -75,18 +75,22 @@ public final class KFailureHandlerDispatcher
         Objects.requireNonNull(context, "context must not be null");
 
         final List<KAssertionFailureHandler> handlersToRun = getSupplementaryHandlersSnapshot();
-        final List<Thread> supplementaryHandlerThreads = new ArrayList<>(handlersToRun.size());
-        for (KAssertionFailureHandler handler : handlersToRun)
+        final Thread[] supplementaryHandlerThreads = new Thread[handlersToRun.size()];
+        for (int i = 0, l = handlersToRun.size(); i < l; i++)
         {
-            if (handler == null) continue;
-            supplementaryHandlerThreads.add(scheduleSupplementaryHandler(handler, context));
+            supplementaryHandlerThreads[i] = scheduleSupplementaryHandler(handlersToRun.get(i), context);
         }
 
-        if (!DISABLE_POPUP_HANDLER) popupHandler.onFailure(context); // blocking until dialog is dismissed
+        if (!DISABLE_POPUP_HANDLER)
+        {
+            popupHandler.onFailure(context); // blocking until dialog is dismissed
+        }
+
         if (CRASH_ON_FAILURE)
         {
-            for (Thread thread : supplementaryHandlerThreads)
+            for (int i = 0, l = supplementaryHandlerThreads.length; i < l; i++)
             {
+                final Thread thread = supplementaryHandlerThreads[i];
                 try
                 {
                     thread.join(); // wait for each supplementary handler to finish
@@ -95,7 +99,8 @@ public final class KFailureHandlerDispatcher
                 {
                     Thread.currentThread().interrupt();
                     LOGGER.log(Level.WARNING,
-                            "Interrupted while waiting for supplementary handler thread to finish: " + thread.getName(), e);
+                            "Interrupted while waiting for supplementary handler thread to finish: " + thread.getName(),
+                            e);
                 }
             }
             System.exit(1);
