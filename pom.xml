@@ -67,7 +67,7 @@
                 <configuration>
                     <systemPropertyVariables>
                         <java.awt.headless>true</java.awt.headless>
-                        <kassert.cohf>false</kassert.cohf>
+                        <kassert.crashOnFailure>false</kassert.crashOnFailure>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>

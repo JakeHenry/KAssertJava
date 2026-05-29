@@ -3,8 +3,7 @@ package com.kassert;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -22,8 +21,15 @@ public final class KFailureHandlerDispatcher
     /** Logger for this class. */
     private static final Logger LOGGER = Logger.getLogger(KFailureHandlerDispatcher.class.getName());
 
-    /** Executor for running supplementary handlers in separate threads. */
-    private final Executor supplementaryExecutor;
+    /** Whether to crash the JVM on assertion failures. */
+    private static final boolean CRASH_ON_FAILURE = Boolean.parseBoolean(
+            System.getProperty("kassert.crashOnFailure", java.awt.GraphicsEnvironment.isHeadless() ? "true" : "false"));
+
+    /** Whether to disable the built-in popup handler. */
+    private static final boolean DISABLE_POPUP_HANDLER = Boolean
+            .parseBoolean(System.getProperty("kassert.disablePopupHandler", "false"));
+
+    private final ThreadFactory supplementaryHandlerThreadFactory = createDefaultThreadFactory();
 
     /** List of registered supplementary failure handlers. */
     private final List<KAssertionFailureHandler> supplementaryHandlers;
@@ -37,7 +43,6 @@ public final class KFailureHandlerDispatcher
      */
     private KFailureHandlerDispatcher()
     {
-        supplementaryExecutor = createDefaultExecutor();
         supplementaryHandlers = new ArrayList<KAssertionFailureHandler>();
         popupHandler = new KPopupDialogFailureHandler();
     }
@@ -70,13 +75,31 @@ public final class KFailureHandlerDispatcher
         Objects.requireNonNull(context, "context must not be null");
 
         final List<KAssertionFailureHandler> handlersToRun = getSupplementaryHandlersSnapshot();
+        final List<Thread> supplementaryHandlerThreads = new ArrayList<>();
         for (KAssertionFailureHandler handler : handlersToRun)
         {
             if (handler == null) continue;
-            scheduleSupplementaryHandler(handler, context);
+            supplementaryHandlerThreads.add(scheduleSupplementaryHandler(handler, context));
         }
 
-        popupHandler.onFailure(context);
+        if (!DISABLE_POPUP_HANDLER) popupHandler.onFailure(context); // blocking until dialog is dismissed
+        if (CRASH_ON_FAILURE)
+        {
+            for (Thread thread : supplementaryHandlerThreads)
+            {
+                try
+                {
+                    thread.join(); // wait for each supplementary handler to finish
+                }
+                catch (InterruptedException e)
+                {
+                    Thread.currentThread().interrupt();
+                    LOGGER.log(Level.WARNING,
+                            "Interrupted while waiting for supplementary handler thread to finish: " + thread.getName(), e);
+                }
+            }
+            System.exit(1);
+        }
     }
 
     /**
@@ -106,42 +129,39 @@ public final class KFailureHandlerDispatcher
      * @param handler the handler to schedule
      * @param context the context to pass to the handler when it runs
      */
-    private void scheduleSupplementaryHandler(final KAssertionFailureHandler handler,
+    private Thread scheduleSupplementaryHandler(final KAssertionFailureHandler handler,
             final KAssertionFailureContext context)
     {
-        try
+        final Thread worker = supplementaryHandlerThreadFactory.newThread(() ->
         {
-            supplementaryExecutor.execute(() ->
+            try
             {
-                try
-                {
-                    handler.onFailure(context);
-                }
-                catch (RuntimeException error)
-                {
-                    LOGGER.log(Level.SEVERE, "Supplementary assertion failure handler threw an exception.", error);
-                }
-            });
-        }
-        catch (RuntimeException error)
-        {
-            LOGGER.log(Level.SEVERE, "Failed to schedule supplementary assertion failure handler.", error);
-        }
+                handler.onFailure(context);
+            }
+            catch (Exception e)
+            {
+                LOGGER.log(Level.SEVERE, "Exception thrown by supplementary failure handler: " + handler, e);
+            }
+        });
+        worker.start();
+        return worker;
     }
 
     /**
-     * Creates the default executor for running supplementary handlers.
-     *
-     * @return the default executor
+     * Creates the default thread factory for running supplementary handlers in
+     * separate threads.
+     * 
+     * @return the default thread factory
      */
-    private static Executor createDefaultExecutor()
+    private ThreadFactory createDefaultThreadFactory()
     {
         final AtomicInteger threadCounter = new AtomicInteger(1);
-        return Executors.newCachedThreadPool(runnable ->
+        return runnable ->
         {
-            final Thread worker = new Thread(runnable, "kassert-failure-handler-" + threadCounter.getAndIncrement());
+            final Thread worker = new Thread(runnable,
+                    "kassert-supplementary-handler-" + threadCounter.getAndIncrement());
             worker.setDaemon(true);
             return worker;
-        });
+        };
     }
 }

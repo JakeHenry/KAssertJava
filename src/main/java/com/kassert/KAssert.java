@@ -36,6 +36,24 @@ public final class KAssert
      */
     public static final boolean ENABLED = KAssertConfig.ENABLED;
 
+    static
+    {
+        boolean assertionsEnabled = false;
+        assert assertionsEnabled = true; // Intentional side effect to detect if assertions are enabled
+        if (assertionsEnabled && !ENABLED)
+        {
+            LOG.severe("Assertions are enabled but KAssert is disabled.");
+            new KPopupDialogFailureHandler().onFailure(new KAssertionFailureContext(
+                    new IllegalStateException("Assertions are enabled but KAssert is disabled.")));
+        }
+        else if (ENABLED)
+        {
+            LOG.severe("KAssert is enabled, but assertions are not enabled.");
+            new KPopupDialogFailureHandler().onFailure(new KAssertionFailureContext(
+                    new IllegalStateException("KAssert is enabled, but assertions are not enabled.")));
+        }
+    }
+
     /**
      * Prevents instantiation of this utility class.
      */

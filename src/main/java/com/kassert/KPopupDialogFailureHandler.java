@@ -16,8 +16,6 @@ import javax.swing.JTextArea;
  */
 public final class KPopupDialogFailureHandler implements KAssertionFailureHandler
 {
-    /** Flag controlling whether headless assertion failures terminate the JVM. */
-    private static final boolean CRASH_ON_HEADLESS_FAILURE = Boolean.getBoolean("kassert.cohf");
     /** Logger for popup handling failures. */
     private static final Logger LOGGER = Logger.getLogger(KPopupDialogFailureHandler.class.getName());
 
@@ -29,10 +27,10 @@ public final class KPopupDialogFailureHandler implements KAssertionFailureHandle
     @Override
     public void onFailure(final KAssertionFailureContext context)
     {
+        if (GraphicsEnvironment.isHeadless()) return; // Cannot show dialog in headless environment
         if (context == null) throw new IllegalArgumentException("context must not be null");
         if (context.assertionError() == null)
             throw new IllegalStateException("context.assertionError() must not be null");
-        if (GraphicsEnvironment.isHeadless() && CRASH_ON_HEADLESS_FAILURE) System.exit(1);
 
         final Runnable showDialog = () ->
         {
@@ -43,7 +41,8 @@ public final class KPopupDialogFailureHandler implements KAssertionFailureHandle
             area.setCaretPosition(0);
             final JScrollPane scrollPane = new JScrollPane(area);
 
-            final String[] options = { "Continue", "Exit JVM" };
+            final String[] options =
+            { "Continue", "Exit JVM" };
             final JOptionPane optionPane = new JOptionPane(scrollPane, JOptionPane.ERROR_MESSAGE,
                     JOptionPane.DEFAULT_OPTION, null, options, options[0]);
             final JDialog dialog = optionPane.createDialog(null, "KAssert Debug Assertion Failure");
@@ -71,7 +70,6 @@ public final class KPopupDialogFailureHandler implements KAssertionFailureHandle
             catch (Exception e)
             {
                 LOGGER.log(Level.SEVERE, "Failed to show assertion failure dialog.", e);
-                if (CRASH_ON_HEADLESS_FAILURE) System.exit(1);
             }
         }
     }
@@ -81,7 +79,7 @@ public final class KPopupDialogFailureHandler implements KAssertionFailureHandle
      * error message and stack trace.
      * 
      * @param context failure context metadata
-     * @param error the RuntimeException representing the assertion failure
+     * @param error   the RuntimeException representing the assertion failure
      * @return a string containing the error message and stack trace formatted for
      *         display in the dialog.
      */

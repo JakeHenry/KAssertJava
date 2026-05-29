@@ -134,8 +134,8 @@ public class KAssertTest
             {
                 // expected
             }
-            assertNotNull(invocationFlag.get());
             assertTrue(handlerStartedLatch.await(30, TimeUnit.SECONDS));
+            assertNotNull(invocationFlag.get());
         }
         finally
         {
@@ -173,8 +173,8 @@ public class KAssertTest
             {
                 // expected
             }
-            assertNull(invocationFlag.get());
             assertFalse(handlerStartedLatch.await(3, TimeUnit.SECONDS));
+            assertNull(invocationFlag.get());
         }
         finally
         {
