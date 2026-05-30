@@ -21,9 +21,9 @@ import java.util.function.Predicate;
  * <p>
  * Create instances with {@link #ok(Object)} and
  * {@link #err(Class, RuntimeException)}. Query the variant with {@link #ok()} /
- * {@link #err()}, extract values with {@link #expect()} / {@link #getOr(Object)},
- * and chain operations with {@link #map(Function)}, {@link #andThen(Function)},
- * etc.
+ * {@link #err()}, extract values with {@link #expect()} /
+ * {@link #getOr(Object)}, and chain operations with {@link #map(Function)},
+ * {@link #andThen(Function)}, etc.
  *
  * @param <T> the Ok value type
  */
@@ -123,7 +123,7 @@ public final class KResult<T>
      */
     public boolean ok()
     {
-        return error == null;
+        return !err();
     }
 
     /**
@@ -213,9 +213,7 @@ public final class KResult<T>
      */
     public T getOr(final T defaultValue)
     {
-        if (ok())
-            return value;
-        return defaultValue;
+        return getOrElse(e -> defaultValue);
     }
 
     /**
@@ -327,13 +325,10 @@ public final class KResult<T>
      * @throws NullPointerException if {@code other} is {@code null} and this
      *                              result is Err
      */
-    @SuppressWarnings("unchecked")
     public <U> KResult<U> and(final KResult<U> other)
     {
         Objects.requireNonNull(other, "other must not be null");
-        if (!ok())
-            return err((Class<U>) Object.class, error);
-        return other;
+        return andThen(v -> other);
     }
 
     /**
@@ -348,13 +343,12 @@ public final class KResult<T>
      *                              {@code null}
      */
     @SuppressWarnings("unchecked")
-    public <U> KResult<? extends U> andThen(
-            final Function<T, KResult<? extends U>> fn)
+    public <U> KResult<U> andThen(final Function<T, KResult<U>> fn)
     {
         Objects.requireNonNull(fn, "fn must not be null");
         if (!ok())
             return err((Class<U>) Object.class, error);
-        final KResult<? extends U> result = fn.apply(value);
+        final KResult<U> result = fn.apply(value);
         Objects.requireNonNull(result, "andThen function must not return null");
         return result;
     }
