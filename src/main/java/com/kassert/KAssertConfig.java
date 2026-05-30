@@ -1,5 +1,7 @@
 package com.kassert;
 
+import java.util.logging.Logger;
+
 /**
  * KAssert compile-time configuration flag holder.
  *
@@ -10,7 +12,7 @@ package com.kassert;
 final class KAssertConfig
 {
     /** Logger for configuration diagnostics. */
-    private static final java.util.logging.Logger LOGGER = java.util.logging.Logger
+    private static final Logger LOGGER = Logger
             .getLogger(KAssertConfig.class.getName());
 
     /** Mutable enablement flag used by library code and tests. */
@@ -31,8 +33,10 @@ final class KAssertConfig
      */
     private static boolean getEnabled()
     {
-        LOGGER.log(java.util.logging.Level.SEVERE, "Default KAssertConfig is being used. Enabled = " + ENABLED
-                + ". To enable KAssert, generate a custom KAssertConfig with the annotation processor.");
+        LOGGER.log(java.util.logging.Level.SEVERE,
+                "Default KAssertConfig is being used. Enabled = " + ENABLED
+                        + ". To enable KAssert, generate a custom KAssertConfig "
+                        + "with the annotation processor.");
         return false;
     }
 

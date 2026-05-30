@@ -506,7 +506,8 @@ public class KResultTest
             at(e.getMessage().contains("expect()"));
         }
 
-        // Null message on err also throws NullPointerException (null check first)
+        // Null message on err also throws NullPointerException (null check
+        // first)
         try
         {
             errR.expect(null);
@@ -590,7 +591,8 @@ public class KResultTest
             at(e.getMessage().contains("expectErr()"));
         }
 
-        // Null message on ok also throws NullPointerException (null check first)
+        // Null message on ok also throws NullPointerException (null check
+        // first)
         try
         {
             okR.expectErr(null);
@@ -776,7 +778,8 @@ public class KResultTest
         aeq("was null", emptyMapped.get());
 
         // Chained maps
-        KResult<? extends Integer> chained = okR.map(String::length).map(n -> n * 2);
+        KResult<? extends Integer> chained = okR.map(String::length)
+                .map(n -> n * 2);
         at(chained.ok());
         aeq(Integer.valueOf(10), chained.get());
 
@@ -846,7 +849,8 @@ public class KResultTest
         as(original, captured.get());
 
         // Err: mapper that wraps exception
-        KResult<String> wrapped = errR.mapErr(e -> new IllegalStateException("wrapped", e));
+        KResult<String> wrapped = errR
+                .mapErr(e -> new IllegalStateException("wrapped", e));
         at(wrapped.err());
         aeq("wrapped", wrapped.getErr().getMessage());
         as(original, wrapped.getErr().getCause());
@@ -933,7 +937,8 @@ public class KResultTest
     }
 
     /**
-     * Verifies {@link KResult#mapOrElse(java.util.function.Function, java.util.function.Function)}.
+     * Verifies
+     * {@link KResult#mapOrElse(java.util.function.Function, java.util.function.Function)}.
      */
     @Test
     public void testMapOrElse()
@@ -1101,7 +1106,8 @@ public class KResultTest
 
         // Ok: function returns Err
         RuntimeException fnErr = new RuntimeException("fn error");
-        KResult<? extends Integer> result2 = okStr.andThen(s -> err(Integer.class, fnErr));
+        KResult<? extends Integer> result2 = okStr
+                .andThen(s -> err(Integer.class, fnErr));
         at(result2.err());
         as(fnErr, result2.getErr());
 
@@ -1120,7 +1126,8 @@ public class KResultTest
         as(ex, result4.getErr());
 
         // Empty: function receives null
-        KResult<? extends String> result5 = emptyR.andThen(v -> ok("from null: " + v));
+        KResult<? extends String> result5 = emptyR
+                .andThen(v -> ok("from null: " + v));
         at(result5.ok());
         aeq("from null: null", result5.get());
 
@@ -1158,17 +1165,19 @@ public class KResultTest
         }
 
         // Chaining multiple andThen
-        KResult<? extends Integer> chained = okStr.andThen(s -> ok(s.length())).andThen(n -> ok(n * 2));
+        KResult<? extends Integer> chained = okStr.andThen(s -> ok(s.length()))
+                .andThen(n -> ok(n * 2));
         at(chained.ok());
         aeq(Integer.valueOf(10), chained.get());
 
         // Chaining: early err short-circuits
         AtomicBoolean secondCalled = new AtomicBoolean(false);
-        KResult<? extends Integer> chainedErr = errStr.andThen(s -> ok(s.length())).andThen(n ->
-        {
-            secondCalled.set(true);
-            return ok(n * 2);
-        });
+        KResult<? extends Integer> chainedErr = errStr
+                .andThen(s -> ok(s.length())).andThen(n ->
+                {
+                    secondCalled.set(true);
+                    return ok(n * 2);
+                });
         at(chainedErr.err());
         af(secondCalled.get());
     }
@@ -1346,7 +1355,8 @@ public class KResultTest
         as(errStr, errReturned);
 
         // Empty: consumer called with null
-        AtomicReference<String> capturedEmpty = new AtomicReference<>("sentinel");
+        AtomicReference<String> capturedEmpty = new AtomicReference<>(
+                "sentinel");
         KResult<String> emptyReturned = emptyR.inspect(capturedEmpty::set);
         as(emptyR, emptyReturned);
         an(capturedEmpty.get());

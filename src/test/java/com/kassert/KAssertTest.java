@@ -29,17 +29,24 @@ public class KAssertTest
     @Test
     public void delegatesAllMethods()
     {
-        final KResult<Boolean> refuseResult = KAssert.kRefuse(false, () -> "refuse");
-        final KResult<String> equalsResult = KAssert.kRequireEquals("expected", "expected", () -> "equals");
-        final KResult<String> sameResult = KAssert.kRequireSame("sameExpected", "sameExpected", () -> "same");
-        final KResult<String> notEqualsResult = KAssert.kRefuseEquals("notExpected", "actual", () -> "notEquals");
-        final KResult<String> notSameResult = KAssert.kRefuseSame("notSameExpected", "notSameActual", () -> "notSame");
-        final KResult<Object> nullResult = KAssert.kRequireNull(null, () -> "null");
-        final KResult<String> notNullResult = KAssert.kRefuseNull("notNull", () -> "notNull");
-        final KResult<String> instanceOfResult = KAssert.kRequireInstanceOf(String.class, "instanceValue",
-                () -> "instanceOf");
-        final KResult<String> notInstanceResult = KAssert.kRefuseInstanceOf(Number.class, "notInstanceValue",
-                () -> "notInstanceOf");
+        final KResult<Boolean> refuseResult = KAssert.kRefuse(false,
+                () -> "refuse");
+        final KResult<String> equalsResult = KAssert.kRequireEquals("expected",
+                "expected", () -> "equals");
+        final KResult<String> sameResult = KAssert.kRequireSame("sameExpected",
+                "sameExpected", () -> "same");
+        final KResult<String> notEqualsResult = KAssert
+                .kRefuseEquals("notExpected", "actual", () -> "notEquals");
+        final KResult<String> notSameResult = KAssert.kRefuseSame(
+                "notSameExpected", "notSameActual", () -> "notSame");
+        final KResult<Object> nullResult = KAssert.kRequireNull(null,
+                () -> "null");
+        final KResult<String> notNullResult = KAssert.kRefuseNull("notNull",
+                () -> "notNull");
+        final KResult<String> instanceOfResult = KAssert.kRequireInstanceOf(
+                String.class, "instanceValue", () -> "instanceOf");
+        final KResult<String> notInstanceResult = KAssert.kRefuseInstanceOf(
+                Number.class, "notInstanceValue", () -> "notInstanceOf");
 
         assertTrue(refuseResult.ok());
         assertEquals(Boolean.TRUE, refuseResult.get());
@@ -77,7 +84,8 @@ public class KAssertTest
             assertEquals("condition must be true", error.getMessage());
             assertNotNull(error.getStackTrace());
             assertTrue(error.getStackTrace().length > 0);
-            assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
+            assertFalse("com.kassert.ex.KResult"
+                    .equals(error.getStackTrace()[0].getClassName()));
         }
     }
 
@@ -103,7 +111,8 @@ public class KAssertTest
     /**
      * Verifies that supplementary handlers run when debug mode is enabled.
      *
-     * @throws InterruptedException if waiting for handler completion is interrupted
+     * @throws InterruptedException if waiting for handler completion is
+     *                              interrupted
      */
     @Test
     public void supplementaryHandlerExecutes() throws InterruptedException
@@ -120,13 +129,15 @@ public class KAssertTest
             {
                 assertNotNull(context);
                 assertNotNull(context.err());
-                assertEquals("condition must be true", context.err().getMessage());
+                assertEquals("condition must be true",
+                        context.err().getMessage());
                 assertNotNull(context.threadName());
                 assertTrue(context.threadId() > 0);
                 invocationFlag.set(new Object());
                 handlerStartedLatch.countDown();
             };
-            KFailureHandlerDispatcher.INSTANCE.registerSupplementaryHandler(testHandler);
+            KFailureHandlerDispatcher.INSTANCE
+                    .registerSupplementaryHandler(testHandler);
             try
             {
                 KAssert.kRequire(false, () -> "condition must be true").get();
@@ -147,12 +158,15 @@ public class KAssertTest
     }
 
     /**
-     * Verifies that supplementary handlers do not run when debug mode is disabled.
+     * Verifies that supplementary handlers do not run when debug mode is
+     * disabled.
      *
-     * @throws InterruptedException if waiting for handler completion is interrupted
+     * @throws InterruptedException if waiting for handler completion is
+     *                              interrupted
      */
     @Test
-    public void supplementaryHandlerNotExecutedWhenDisabled() throws InterruptedException
+    public void supplementaryHandlerNotExecutedWhenDisabled()
+            throws InterruptedException
     {
         assertFalse(KAssertConfig.ENABLED);
         assertFalse(KAssert.ENABLED);
@@ -167,7 +181,8 @@ public class KAssertTest
                 invocationFlag.set(new Object());
                 handlerStartedLatch.countDown();
             };
-            KFailureHandlerDispatcher.INSTANCE.registerSupplementaryHandler(testHandler);
+            KFailureHandlerDispatcher.INSTANCE
+                    .registerSupplementaryHandler(testHandler);
             try
             {
                 KAssert.kRequire(false, () -> "condition must be true").get();
@@ -194,14 +209,16 @@ public class KAssertTest
     @Test
     public void kRequireTest()
     {
-        final KResult<Boolean> result = KAssert.kRequire(true, () -> "condition must be true");
+        final KResult<Boolean> result = KAssert.kRequire(true,
+                () -> "condition must be true");
         assertTrue(result.get());
         assertTrue(result.ok());
         assertFalse(result.err());
         assertEquals(Boolean.TRUE, result.get());
         assertTrue(result.get());
 
-        final KResult<Boolean> failedResult = KAssert.kRequire(false, () -> "condition must be true");
+        final KResult<Boolean> failedResult = KAssert.kRequire(false,
+                () -> "condition must be true");
         try
         {
             failedResult.get();
@@ -212,7 +229,8 @@ public class KAssertTest
             assertEquals("condition must be true", error.getMessage());
             assertNotNull(error.getStackTrace());
             assertTrue(error.getStackTrace().length > 0);
-            assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
+            assertFalse("com.kassert.ex.KResult"
+                    .equals(error.getStackTrace()[0].getClassName()));
         }
         assertFalse(failedResult.ok());
         assertTrue(failedResult.err());
@@ -225,14 +243,16 @@ public class KAssertTest
     @Test
     public void kRefuseTest()
     {
-        final KResult<Boolean> result = KAssert.kRefuse(false, () -> "condition must be false");
+        final KResult<Boolean> result = KAssert.kRefuse(false,
+                () -> "condition must be false");
         assertTrue(result.get());
         assertTrue(result.ok());
         assertFalse(result.err());
         assertEquals(Boolean.TRUE, result.get());
         assertTrue(result.get());
 
-        final KResult<Boolean> failedResult = KAssert.kRefuse(true, () -> "condition must be false");
+        final KResult<Boolean> failedResult = KAssert.kRefuse(true,
+                () -> "condition must be false");
         try
         {
             failedResult.get();
@@ -243,7 +263,8 @@ public class KAssertTest
             assertEquals("condition must be false", error.getMessage());
             assertNotNull(error.getStackTrace());
             assertTrue(error.getStackTrace().length > 0);
-            assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
+            assertFalse("com.kassert.ex.KResult"
+                    .equals(error.getStackTrace()[0].getClassName()));
         }
         assertFalse(failedResult.ok());
         assertTrue(failedResult.err());
@@ -256,12 +277,14 @@ public class KAssertTest
     @Test
     public void kRequireEqualsTest()
     {
-        final KResult<String> result = KAssert.kRequireEquals("expected", "expected", () -> "values must be equal");
+        final KResult<String> result = KAssert.kRequireEquals("expected",
+                "expected", () -> "values must be equal");
         assertEquals("expected", result.get());
         assertTrue(result.ok());
         assertFalse(result.err());
 
-        final KResult<String> failedResult = KAssert.kRequireEquals("expected", "actual", () -> "values must be equal");
+        final KResult<String> failedResult = KAssert.kRequireEquals("expected",
+                "actual", () -> "values must be equal");
         try
         {
             failedResult.get();
@@ -272,17 +295,27 @@ public class KAssertTest
             assertEquals("values must be equal", error.getMessage());
             assertNotNull(error.getStackTrace());
             assertTrue(error.getStackTrace().length > 0);
-            assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
+            assertFalse("com.kassert.ex.KResult"
+                    .equals(error.getStackTrace()[0].getClassName()));
         }
         assertFalse(failedResult.ok());
         assertTrue(failedResult.err());
 
-        assertTrue(KAssert.kRequireEquals(null, null, () -> "null values must be equal").ok());
-        assertFalse(KAssert.kRequireEquals(null, null, () -> "null values must be equal").err());
-        assertFalse(KAssert.kRequireEquals(null, "notNull", () -> "null and non-null must not be equal").ok());
-        assertFalse(KAssert.kRequireEquals("notNull", null, () -> "non-null and null must not be equal").ok());
-        assertTrue(KAssert.kRequireEquals("same", "same", () -> "identical strings must be equal").ok());
-        assertTrue(KAssert.kRequireEquals(new String("equal"), new String("equal"), () -> "equal but distinct strings must be equal").ok());
+        assertTrue(KAssert
+                .kRequireEquals(null, null, () -> "null values must be equal")
+                .ok());
+        assertFalse(KAssert
+                .kRequireEquals(null, null, () -> "null values must be equal")
+                .err());
+        assertFalse(KAssert.kRequireEquals(null, "notNull",
+                () -> "null and non-null must not be equal").ok());
+        assertFalse(KAssert.kRequireEquals("notNull", null,
+                () -> "non-null and null must not be equal").ok());
+        assertTrue(KAssert.kRequireEquals("same", "same",
+                () -> "identical strings must be equal").ok());
+        assertTrue(
+                KAssert.kRequireEquals(new String("equal"), new String("equal"),
+                        () -> "equal but distinct strings must be equal").ok());
     }
 
     /**
@@ -292,12 +325,14 @@ public class KAssertTest
     @Test
     public void kRefuseEqualsTest()
     {
-        final KResult<String> result = KAssert.kRefuseEquals("expected", "actual", () -> "values must differ");
+        final KResult<String> result = KAssert.kRefuseEquals("expected",
+                "actual", () -> "values must differ");
         assertTrue(result.ok());
         assertFalse(result.err());
         assertEquals("actual", result.get());
 
-        final KResult<String> failedResult = KAssert.kRefuseEquals("same", "same", () -> "values must differ");
+        final KResult<String> failedResult = KAssert.kRefuseEquals("same",
+                "same", () -> "values must differ");
         try
         {
             failedResult.get();
@@ -308,17 +343,27 @@ public class KAssertTest
             assertEquals("values must differ", error.getMessage());
             assertNotNull(error.getStackTrace());
             assertTrue(error.getStackTrace().length > 0);
-            assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
+            assertFalse("com.kassert.ex.KResult"
+                    .equals(error.getStackTrace()[0].getClassName()));
         }
         assertFalse(failedResult.ok());
         assertTrue(failedResult.err());
 
-        assertFalse(KAssert.kRefuseEquals(null, null, () -> "null values must differ").ok());
-        assertTrue(KAssert.kRefuseEquals(null, null, () -> "null values must differ").err());
-        assertTrue(KAssert.kRefuseEquals(null, "notNull", () -> "null and non-null must differ").ok());
-        assertTrue(KAssert.kRefuseEquals("notNull", null, () -> "non-null and null must differ").ok());
-        assertFalse(KAssert.kRefuseEquals("same", "same", () -> "identical strings must differ").ok());
-        assertFalse(KAssert.kRefuseEquals(new String("equal"), new String("equal"), () -> "equal but distinct strings must differ").ok());
+        assertFalse(KAssert
+                .kRefuseEquals(null, null, () -> "null values must differ")
+                .ok());
+        assertTrue(KAssert
+                .kRefuseEquals(null, null, () -> "null values must differ")
+                .err());
+        assertTrue(KAssert.kRefuseEquals(null, "notNull",
+                () -> "null and non-null must differ").ok());
+        assertTrue(KAssert.kRefuseEquals("notNull", null,
+                () -> "non-null and null must differ").ok());
+        assertFalse(KAssert.kRefuseEquals("same", "same",
+                () -> "identical strings must differ").ok());
+        assertFalse(
+                KAssert.kRefuseEquals(new String("equal"), new String("equal"),
+                        () -> "equal but distinct strings must differ").ok());
     }
 
     /**
@@ -329,14 +374,16 @@ public class KAssertTest
     public void kRequireSameTest()
     {
         final Object shared = new Object();
-        final KResult<Object> result = KAssert.kRequireSame(shared, shared, () -> "references must match");
+        final KResult<Object> result = KAssert.kRequireSame(shared, shared,
+                () -> "references must match");
         assertTrue(result.get() == shared);
         assertTrue(result.ok());
         assertFalse(result.err());
 
         final Object expected = new Object();
         final Object actual = new Object();
-        final KResult<Object> failedResult = KAssert.kRequireSame(expected, actual, () -> "references must match");
+        final KResult<Object> failedResult = KAssert.kRequireSame(expected,
+                actual, () -> "references must match");
         try
         {
             failedResult.get();
@@ -347,16 +394,28 @@ public class KAssertTest
             assertEquals("references must match", error.getMessage());
             assertNotNull(error.getStackTrace());
             assertTrue(error.getStackTrace().length > 0);
-            assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
+            assertFalse("com.kassert.ex.KResult"
+                    .equals(error.getStackTrace()[0].getClassName()));
         }
         assertFalse(failedResult.ok());
         assertTrue(failedResult.err());
 
-        assertTrue(KAssert.kRequireSame(null, null, () -> "null references must match").ok());
-        assertFalse(KAssert.kRequireSame(null, null, () -> "null references must match").err());
-        assertFalse(KAssert.kRequireSame(null, new Object(), () -> "null and non-null references must not match").ok());
-        assertFalse(KAssert.kRequireSame(new Object(), null, () -> "non-null and null references must not match").ok());
-        assertTrue(KAssert.kRequireSame("same", "same", () -> "identical string literals must match").ok());
+        assertTrue(KAssert
+                .kRequireSame(null, null, () -> "null references must match")
+                .ok());
+        assertFalse(KAssert
+                .kRequireSame(null, null, () -> "null references must match")
+                .err());
+        assertFalse(KAssert
+                .kRequireSame(null, new Object(),
+                        () -> "null and non-null references must not match")
+                .ok());
+        assertFalse(KAssert
+                .kRequireSame(new Object(), null,
+                        () -> "non-null and null references must not match")
+                .ok());
+        assertTrue(KAssert.kRequireSame("same", "same",
+                () -> "identical string literals must match").ok());
     }
 
     /**
@@ -368,13 +427,15 @@ public class KAssertTest
     {
         final Object left = new Object();
         final Object right = new Object();
-        final KResult<Object> result = KAssert.kRefuseSame(left, right, () -> "references must differ");
+        final KResult<Object> result = KAssert.kRefuseSame(left, right,
+                () -> "references must differ");
         assertTrue(result.get() == right);
         assertTrue(result.ok());
         assertFalse(result.err());
 
         final Object shared = new Object();
-        final KResult<Object> failedResult = KAssert.kRefuseSame(shared, shared, () -> "references must differ");
+        final KResult<Object> failedResult = KAssert.kRefuseSame(shared, shared,
+                () -> "references must differ");
         try
         {
             failedResult.get();
@@ -385,16 +446,24 @@ public class KAssertTest
             assertEquals("references must differ", error.getMessage());
             assertNotNull(error.getStackTrace());
             assertTrue(error.getStackTrace().length > 0);
-            assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
+            assertFalse("com.kassert.ex.KResult"
+                    .equals(error.getStackTrace()[0].getClassName()));
         }
         assertFalse(failedResult.ok());
         assertTrue(failedResult.err());
 
-        assertFalse(KAssert.kRefuseSame(null, null, () -> "null references must differ").ok());
-        assertTrue(KAssert.kRefuseSame(null, null, () -> "null references must differ").err());
-        assertTrue(KAssert.kRefuseSame(null, new Object(), () -> "null and non-null references must differ").ok());
-        assertTrue(KAssert.kRefuseSame(new Object(), null, () -> "non-null and null references must differ").ok());
-        assertFalse(KAssert.kRefuseSame("same", "same", () -> "identical string literals must differ").ok());
+        assertFalse(KAssert
+                .kRefuseSame(null, null, () -> "null references must differ")
+                .ok());
+        assertTrue(KAssert
+                .kRefuseSame(null, null, () -> "null references must differ")
+                .err());
+        assertTrue(KAssert.kRefuseSame(null, new Object(),
+                () -> "null and non-null references must differ").ok());
+        assertTrue(KAssert.kRefuseSame(new Object(), null,
+                () -> "non-null and null references must differ").ok());
+        assertFalse(KAssert.kRefuseSame("same", "same",
+                () -> "identical string literals must differ").ok());
     }
 
     /**
@@ -404,13 +473,15 @@ public class KAssertTest
     @Test
     public void kRequireNullTest()
     {
-        final KResult<Object> result = KAssert.kRequireNull(null, () -> "value must be null");
+        final KResult<Object> result = KAssert.kRequireNull(null,
+                () -> "value must be null");
         assertTrue(result.get() == null);
         assertTrue(result.ok());
         assertFalse(result.err());
 
         final Object value = new Object();
-        final KResult<Object> failedResult = KAssert.kRequireNull(value, () -> "value must be null");
+        final KResult<Object> failedResult = KAssert.kRequireNull(value,
+                () -> "value must be null");
         try
         {
             failedResult.get();
@@ -421,7 +492,8 @@ public class KAssertTest
             assertEquals("value must be null", error.getMessage());
             assertNotNull(error.getStackTrace());
             assertTrue(error.getStackTrace().length > 0);
-            assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
+            assertFalse("com.kassert.ex.KResult"
+                    .equals(error.getStackTrace()[0].getClassName()));
         }
         assertFalse(failedResult.ok());
         assertTrue(failedResult.err());
@@ -435,13 +507,15 @@ public class KAssertTest
     public void kRefuseNullTest()
     {
         final String value = "present";
-        final KResult<String> result = KAssert.kRefuseNull(value, () -> "value must not be null");
+        final KResult<String> result = KAssert.kRefuseNull(value,
+                () -> "value must not be null");
         assertTrue(result.get() == value);
         assertTrue(result.ok());
         assertFalse(result.err());
         assertEquals("present", result.get());
 
-        final KResult<Object> failedResult = KAssert.kRefuseNull(null, () -> "value must not be null");
+        final KResult<Object> failedResult = KAssert.kRefuseNull(null,
+                () -> "value must not be null");
         try
         {
             failedResult.get();
@@ -452,7 +526,8 @@ public class KAssertTest
             assertEquals("value must not be null", error.getMessage());
             assertNotNull(error.getStackTrace());
             assertTrue(error.getStackTrace().length > 0);
-            assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
+            assertFalse("com.kassert.ex.KResult"
+                    .equals(error.getStackTrace()[0].getClassName()));
         }
         assertFalse(failedResult.ok());
         assertTrue(failedResult.err());
@@ -466,14 +541,15 @@ public class KAssertTest
     public void kRequireInstanceOfTest()
     {
         final Integer number = Integer.valueOf(42);
-        final KResult<Integer> result = KAssert.kRequireInstanceOf(Number.class, number, () -> "value must be Number");
+        final KResult<Integer> result = KAssert.kRequireInstanceOf(Number.class,
+                number, () -> "value must be Number");
         assertTrue(result.get() == number);
         assertTrue(result.ok());
         assertFalse(result.err());
         assertEquals(Integer.valueOf(42), result.get());
 
-        final KResult<String> failedTypeResult = KAssert.kRequireInstanceOf(Number.class, "text",
-                () -> "value must be Number");
+        final KResult<String> failedTypeResult = KAssert.kRequireInstanceOf(
+                Number.class, "text", () -> "value must be Number");
         try
         {
             failedTypeResult.get();
@@ -484,13 +560,14 @@ public class KAssertTest
             assertEquals("value must be Number", error.getMessage());
             assertNotNull(error.getStackTrace());
             assertTrue(error.getStackTrace().length > 0);
-            assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
+            assertFalse("com.kassert.ex.KResult"
+                    .equals(error.getStackTrace()[0].getClassName()));
         }
         assertFalse(failedTypeResult.ok());
         assertTrue(failedTypeResult.err());
 
-        final KResult<String> failedNullTypeResult = KAssert.kRequireInstanceOf(null, "text",
-                () -> "value must be Number");
+        final KResult<String> failedNullTypeResult = KAssert
+                .kRequireInstanceOf(null, "text", () -> "value must be Number");
         try
         {
             failedNullTypeResult.get();
@@ -501,7 +578,8 @@ public class KAssertTest
             assertEquals("expectedType must not be null", error.getMessage());
             assertNotNull(error.getStackTrace());
             assertTrue(error.getStackTrace().length > 0);
-            assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
+            assertFalse("com.kassert.ex.KResult"
+                    .equals(error.getStackTrace()[0].getClassName()));
         }
         assertFalse(failedNullTypeResult.ok());
         assertTrue(failedNullTypeResult.err());
@@ -515,14 +593,15 @@ public class KAssertTest
     public void kRefuseInstanceOfTest()
     {
         final String value = "text";
-        final KResult<String> result = KAssert.kRefuseInstanceOf(Number.class, value, () -> "value must not be Number");
+        final KResult<String> result = KAssert.kRefuseInstanceOf(Number.class,
+                value, () -> "value must not be Number");
         assertTrue(result.get() == value);
         assertTrue(result.ok());
         assertFalse(result.err());
         assertEquals("text", result.get());
 
-        final KResult<String> failedTypeResult = KAssert.kRefuseInstanceOf(String.class, value,
-                () -> "value must not be String");
+        final KResult<String> failedTypeResult = KAssert.kRefuseInstanceOf(
+                String.class, value, () -> "value must not be String");
         try
         {
             failedTypeResult.get();
@@ -533,13 +612,14 @@ public class KAssertTest
             assertEquals("value must not be String", error.getMessage());
             assertNotNull(error.getStackTrace());
             assertTrue(error.getStackTrace().length > 0);
-            assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
+            assertFalse("com.kassert.ex.KResult"
+                    .equals(error.getStackTrace()[0].getClassName()));
         }
         assertFalse(failedTypeResult.ok());
         assertTrue(failedTypeResult.err());
 
-        final KResult<String> failedNullTypeResult = KAssert.kRefuseInstanceOf(null, value,
-                () -> "value must not be String");
+        final KResult<String> failedNullTypeResult = KAssert.kRefuseInstanceOf(
+                null, value, () -> "value must not be String");
         try
         {
             failedNullTypeResult.get();
@@ -550,7 +630,8 @@ public class KAssertTest
             assertEquals("refusedType must not be null", error.getMessage());
             assertNotNull(error.getStackTrace());
             assertTrue(error.getStackTrace().length > 0);
-            assertFalse("com.kassert.ex.KResult".equals(error.getStackTrace()[0].getClassName()));
+            assertFalse("com.kassert.ex.KResult"
+                    .equals(error.getStackTrace()[0].getClassName()));
         }
         assertFalse(failedNullTypeResult.ok());
         assertTrue(failedNullTypeResult.err());

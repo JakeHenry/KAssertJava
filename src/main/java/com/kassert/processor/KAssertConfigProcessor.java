@@ -61,17 +61,18 @@ public final class KAssertConfigProcessor extends AbstractProcessor
      * @return {@code false} to allow other processors to process annotations
      */
     @Override
-    public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv)
+    public boolean process(final Set<? extends TypeElement> annotations,
+            final RoundEnvironment roundEnv)
     {
         if (generated || roundEnv.processingOver())
-        {
             return false;
-        }
 
-        final boolean enabled = Boolean.parseBoolean(getOptionOrDefault(OPTION_ENABLED, DEFAULT_ENABLED));
+        final boolean enabled = Boolean.parseBoolean(
+                getOptionOrDefault(OPTION_ENABLED, DEFAULT_ENABLED));
         try
         {
-            final JavaFileObject sourceFile = processingEnv.getFiler().createSourceFile(DEFAULT_CLASS_NAME);
+            final JavaFileObject sourceFile = processingEnv.getFiler()
+                    .createSourceFile(DEFAULT_CLASS_NAME);
             try (Writer writer = sourceFile.openWriter())
             {
                 writeSource(writer, enabled);
@@ -85,9 +86,9 @@ public final class KAssertConfigProcessor extends AbstractProcessor
         catch (IOException error)
         {
             processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
-                    "Failed to generate " + DEFAULT_CLASS_NAME + ": " + error.getMessage());
+                    "Failed to generate " + DEFAULT_CLASS_NAME + ": "
+                            + error.getMessage());
         }
-
         return false;
     }
 
@@ -98,11 +99,15 @@ public final class KAssertConfigProcessor extends AbstractProcessor
      * @param enabled generated enabled constant value
      * @throws IOException when writing fails
      */
-    static void writeSource(final Writer writer, final boolean enabled) throws IOException
+    static void writeSource(final Writer writer, final boolean enabled)
+            throws IOException
     {
-        final String source = String.format("package com.kassert;%n" + "final class KAssertConfig%n" + "{%n"
-                + "    static final boolean ENABLED = %b;%n" + "    private KAssertConfig()%n" + "    {%n"
-                + "        // prevent instantiation%n" + "    }%n" + "}%n", enabled);
+        final String source = String.format("package com.kassert;%n"
+                + "final class KAssertConfig%n" + "{%n"
+                + "    static final boolean ENABLED = %b;%n"
+                + "    private KAssertConfig()%n" + "    {%n"
+                + "        // prevent instantiation%n" + "    }%n" + "}%n",
+                enabled);
         writer.write(source);
     }
 
@@ -117,9 +122,7 @@ public final class KAssertConfigProcessor extends AbstractProcessor
     {
         final String value = processingEnv.getOptions().get(key);
         if (value == null)
-        {
             return fallback;
-        }
         return value.trim();
     }
 }

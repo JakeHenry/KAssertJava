@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.JOptionPane;
 
@@ -16,31 +17,39 @@ import com.kassert.ex.KResult;
 /**
  * Facade entry point for KAssert require operations.
  *
- * <p> KAssert provides runtime assertion methods. For client-side compile-time
+ * <p>
+ * KAssert provides runtime assertion methods. For client-side compile-time
  * elimination, use the generated constant {@code
  * com.kassert.KAssertConfig.ENABLED} (created by the included annotation
  * processor).
  *
- * <p> Consumers should guard assertion calls for zero-overhead elimination in
+ * <p>
+ * Consumers should guard assertion calls for zero-overhead elimination in
  * release builds:
  *
- * <pre>{@code if (com.kassert.KAssertConfig.ENABLED) {
- * KAssert.kRequire(condition, () -> "message").unwrap(); } }</pre>
+ * <pre>{@code
+ * if (com.kassert.KAssertConfig.ENABLED)
+ * {
+ *     KAssert.kRequire(condition, () -> "message").unwrap();
+ * }
+ * }</pre>
  *
- * <p> When the generated client flag is {@code false}, the Java compiler
- * eliminates guarded blocks entirely from bytecode via dead code elimination.
+ * <p>
+ * When the generated client flag is {@code false}, the Java compiler eliminates
+ * guarded blocks entirely from bytecode via dead code elimination.
  */
 public final class KAssert
 {
     /** Logger used for assertion failure diagnostics. */
-    private static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger(KAssert.class.getName());
+    private static final Logger LOG = Logger.getLogger(KAssert.class.getName());
 
     /** Flag to control logging of assertion failures. */
-    private static final boolean LOG_FAILURES = Boolean.parseBoolean(System.getProperty("kassert.logFailures", "true"));
+    private static final boolean LOG_FAILURES = Boolean
+            .parseBoolean(System.getProperty("kassert.logFailures", "true"));
 
     /** Whether to disable the built-in popup handler. */
-    private static final boolean DISABLE_POPUP_HANDLER = Boolean
-            .parseBoolean(System.getProperty("kassert.disablePopupHandler", "false"));
+    private static final boolean DISABLE_POPUP_HANDLER = Boolean.parseBoolean(
+            System.getProperty("kassert.disablePopupHandler", "false"));
 
     /**
      * Compile-time conditional compilation flag. This references
@@ -55,16 +64,21 @@ public final class KAssert
         assert assertionsEnabled = true; // Intentional side effect
         if (assertionsEnabled != ENABLED)
         {
-            final IllegalStateException configException = new IllegalStateException(String.format(
-                    "KAssert is misconfigured: assertionsEnabled=%b, KAssertConfig.ENABLED=%b. "
-                            + "This may be due to missing annotation processing in the client build.",
-                    assertionsEnabled, ENABLED));
-            if (LOG_FAILURES) LOG.log(Level.SEVERE, "KAssert misuse detected!", configException);
+            final IllegalStateException configException = new IllegalStateException(
+                    String.format(
+                            "KAssert is misconfigured: assertionsEnabled=%b, KAssertConfig.ENABLED=%b. "
+                                    + "This may be due to missing annotation processing in the client build.",
+                            assertionsEnabled, ENABLED));
+            if (LOG_FAILURES)
+                LOG.log(Level.SEVERE, "KAssert misuse detected!",
+                        configException);
             if (!DISABLE_POPUP_HANDLER)
             {
                 final KPopupDialogFailureHandler kPopupDialogFailureHandler = new KPopupDialogFailureHandler(
-                        JOptionPane.WARNING_MESSAGE, "KAssert Misconfiguration", TimeUnit.SECONDS.toMillis(30));
-                kPopupDialogFailureHandler.onFailure(new KAssertionFailureContext(configException));
+                        JOptionPane.WARNING_MESSAGE, "KAssert Misconfiguration",
+                        TimeUnit.SECONDS.toMillis(30));
+                kPopupDialogFailureHandler.onFailure(
+                        new KAssertionFailureContext(configException));
             }
         }
     }
@@ -81,13 +95,16 @@ public final class KAssert
      * Requires the supplied condition to be {@code true}.
      *
      * @param condition       the condition to evaluate
-     * @param messageSupplier supplies the failure message if the assertion fails
-     * @return an Ok result containing {@code true} when the condition holds, or an
-     *         Err result otherwise
+     * @param messageSupplier supplies the failure message if the assertion
+     *                        fails
+     * @return an Ok result containing {@code true} when the condition holds, or
+     *         an Err result otherwise
      */
-    public static KResult<Boolean> kRequire(final boolean condition, final Supplier<String> messageSupplier)
+    public static KResult<Boolean> kRequire(final boolean condition,
+            final Supplier<String> messageSupplier)
     {
-        if (!condition) return failedResult(messageSupplier);
+        if (!condition)
+            return failedResult(messageSupplier);
         return ok(Boolean.valueOf(condition));
     }
 
@@ -95,13 +112,16 @@ public final class KAssert
      * Requires the supplied condition to be {@code false}.
      *
      * @param condition       the condition to evaluate
-     * @param messageSupplier supplies the failure message if the assertion fails
-     * @return an Ok result containing {@code true} when the condition is false, or
-     *         an Err result otherwise
+     * @param messageSupplier supplies the failure message if the assertion
+     *                        fails
+     * @return an Ok result containing {@code true} when the condition is false,
+     *         or an Err result otherwise
      */
-    public static KResult<Boolean> kRefuse(final boolean condition, final Supplier<String> messageSupplier)
+    public static KResult<Boolean> kRefuse(final boolean condition,
+            final Supplier<String> messageSupplier)
     {
-        if (condition) return failedResult(messageSupplier);
+        if (condition)
+            return failedResult(messageSupplier);
         return ok(Boolean.valueOf(!condition));
     }
 
@@ -112,14 +132,16 @@ public final class KAssert
      * @param <K>             the actual type
      * @param expected        the expected value
      * @param actual          the actual value
-     * @param messageSupplier supplies the failure message if the assertion fails
-     * @return an Ok result containing {@code actual} when the values are equal, or
-     *         an Err result otherwise
+     * @param messageSupplier supplies the failure message if the assertion
+     *                        fails
+     * @return an Ok result containing {@code actual} when the values are equal,
+     *         or an Err result otherwise
      */
-    public static <T, K> KResult<K> kRequireEquals(final T expected, final K actual,
-            final Supplier<String> messageSupplier)
+    public static <T, K> KResult<K> kRequireEquals(final T expected,
+            final K actual, final Supplier<String> messageSupplier)
     {
-        if (!Objects.equals(expected, actual)) return failedResult(messageSupplier);
+        if (!Objects.equals(expected, actual))
+            return failedResult(messageSupplier);
         return actual == null ? empty() : ok(actual);
     }
 
@@ -130,32 +152,37 @@ public final class KAssert
      * @param <K>             the actual type
      * @param refusedValue    the refused value
      * @param actual          the actual value
-     * @param messageSupplier supplies the failure message if the assertion fails
-     * @return an Ok result containing {@code actual} when the values are different,
-     *         or an Err result otherwise
+     * @param messageSupplier supplies the failure message if the assertion
+     *                        fails
+     * @return an Ok result containing {@code actual} when the values are
+     *         different, or an Err result otherwise
      */
-    public static <T, K> KResult<K> kRefuseEquals(final T refusedValue, final K actual,
-            final Supplier<String> messageSupplier)
+    public static <T, K> KResult<K> kRefuseEquals(final T refusedValue,
+            final K actual, final Supplier<String> messageSupplier)
     {
-        if (Objects.equals(refusedValue, actual)) return failedResult(messageSupplier);
+        if (Objects.equals(refusedValue, actual))
+            return failedResult(messageSupplier);
         return actual == null ? empty() : ok(actual);
     }
 
     /**
-     * Requires {@code expected} and {@code actual} to reference the same object.
+     * Requires {@code expected} and {@code actual} to reference the same
+     * object.
      *
      * @param <T>             the reference type
      * @param <K>             the actual type
      * @param expected        the expected reference
      * @param actual          the actual reference
-     * @param messageSupplier supplies the failure message if the assertion fails
-     * @return an Ok result containing {@code actual} when both references are the
-     *         same, or an Err result otherwise
+     * @param messageSupplier supplies the failure message if the assertion
+     *                        fails
+     * @return an Ok result containing {@code actual} when both references are
+     *         the same, or an Err result otherwise
      */
-    public static <T, K> KResult<K> kRequireSame(final T expected, final K actual,
-            final Supplier<String> messageSupplier)
+    public static <T, K> KResult<K> kRequireSame(final T expected,
+            final K actual, final Supplier<String> messageSupplier)
     {
-        if (expected != actual) return failedResult(messageSupplier);
+        if (expected != actual)
+            return failedResult(messageSupplier);
         return actual == null ? empty() : ok(actual);
     }
 
@@ -167,14 +194,16 @@ public final class KAssert
      * @param <K>              the actual type
      * @param refusedReference the refused reference
      * @param actual           the actual reference
-     * @param messageSupplier  supplies the failure message if the assertion fails
-     * @return an Ok result containing {@code actual} when the references differ, or
-     *         an Err result otherwise
+     * @param messageSupplier  supplies the failure message if the assertion
+     *                         fails
+     * @return an Ok result containing {@code actual} when the references
+     *         differ, or an Err result otherwise
      */
-    public static <T, K> KResult<K> kRefuseSame(final T refusedReference, final K actual,
-            final Supplier<String> messageSupplier)
+    public static <T, K> KResult<K> kRefuseSame(final T refusedReference,
+            final K actual, final Supplier<String> messageSupplier)
     {
-        if (refusedReference == actual) return failedResult(messageSupplier);
+        if (refusedReference == actual)
+            return failedResult(messageSupplier);
         return actual == null ? empty() : ok(actual);
     }
 
@@ -183,13 +212,16 @@ public final class KAssert
      *
      * @param <T>             the object type
      * @param object          the value to validate
-     * @param messageSupplier supplies the failure message if the assertion fails
+     * @param messageSupplier supplies the failure message if the assertion
+     *                        fails
      * @return an Ok result when the object is {@code null}, or an Err result
      *         otherwise
      */
-    public static <T> KResult<T> kRequireNull(final T object, final Supplier<String> messageSupplier)
+    public static <T> KResult<T> kRequireNull(final T object,
+            final Supplier<String> messageSupplier)
     {
-        if (object != null) return failedResult(messageSupplier);
+        if (object != null)
+            return failedResult(messageSupplier);
         return empty();
     }
 
@@ -198,12 +230,16 @@ public final class KAssert
      *
      * @param <T>             the object type
      * @param value           the value to validate
-     * @param messageSupplier supplies the failure message if the assertion fails
-     * @return an Ok result when the object is non-null, or an Err result otherwise
+     * @param messageSupplier supplies the failure message if the assertion
+     *                        fails
+     * @return an Ok result when the object is non-null, or an Err result
+     *         otherwise
      */
-    public static <T> KResult<T> kRefuseNull(final T value, final Supplier<String> messageSupplier)
+    public static <T> KResult<T> kRefuseNull(final T value,
+            final Supplier<String> messageSupplier)
     {
-        if (value == null) return failedResult(messageSupplier);
+        if (value == null)
+            return failedResult(messageSupplier);
         return ok(value);
     }
 
@@ -213,15 +249,18 @@ public final class KAssert
      * @param <T>             the object type
      * @param expectedType    the required runtime type
      * @param object          the value to validate
-     * @param messageSupplier supplies the failure message if the assertion fails
+     * @param messageSupplier supplies the failure message if the assertion
+     *                        fails
      * @return an Ok result containing {@code object} when it is an instance of
      *         {@code expectedType}, or an Err result otherwise
      */
-    public static <T> KResult<T> kRequireInstanceOf(final Class<?> expectedType, final T object,
-            final Supplier<String> messageSupplier)
+    public static <T> KResult<T> kRequireInstanceOf(final Class<?> expectedType,
+            final T object, final Supplier<String> messageSupplier)
     {
-        if (expectedType == null) return failedResult(() -> "expectedType must not be null");
-        if (!expectedType.isInstance(object)) return failedResult(messageSupplier);
+        if (expectedType == null)
+            return failedResult(() -> "expectedType must not be null");
+        if (!expectedType.isInstance(object))
+            return failedResult(messageSupplier);
         return ok(object);
     }
 
@@ -231,15 +270,18 @@ public final class KAssert
      * @param <T>             the object type
      * @param refusedType     the refused runtime type
      * @param object          the value to validate
-     * @param messageSupplier supplies the failure message if the assertion fails
-     * @return an Ok result containing {@code object} when it is not an instance of
-     *         {@code refusedType}, or an Err result otherwise
+     * @param messageSupplier supplies the failure message if the assertion
+     *                        fails
+     * @return an Ok result containing {@code object} when it is not an instance
+     *         of {@code refusedType}, or an Err result otherwise
      */
-    public static <T> KResult<T> kRefuseInstanceOf(final Class<?> refusedType, final T object,
-            final Supplier<String> messageSupplier)
+    public static <T> KResult<T> kRefuseInstanceOf(final Class<?> refusedType,
+            final T object, final Supplier<String> messageSupplier)
     {
-        if (refusedType == null) return failedResult(() -> "refusedType must not be null");
-        if (refusedType.isInstance(object)) return failedResult(messageSupplier);
+        if (refusedType == null)
+            return failedResult(() -> "refusedType must not be null");
+        if (refusedType.isInstance(object))
+            return failedResult(messageSupplier);
         return ok(object);
     }
 
@@ -250,33 +292,43 @@ public final class KAssert
      * When {@link #ENABLED} is {@code false}, this method is a no-op.
      *
      * @param handler the supplementary handler to register
-     * @throws IllegalArgumentException if {@code handler} is {@code null} and debug
-     *                                  mode is enabled
+     * @throws IllegalArgumentException if {@code handler} is {@code null} and
+     *                                  debug mode is enabled
      */
-    public static void registerDebugFailureHandler(final KAssertionFailureHandler handler)
+    public static void registerDebugFailureHandler(
+            final KAssertionFailureHandler handler)
     {
-        if (KAssertConfig.ENABLED) KFailureHandlerDispatcher.INSTANCE.registerSupplementaryHandler(handler);
+        if (KAssertConfig.ENABLED)
+        {
+            KFailureHandlerDispatcher.INSTANCE
+                    .registerSupplementaryHandler(handler);
+        }
     }
 
     /**
-     * Creates a failed assertion result and dispatches debug handlers when enabled.
+     * Creates a failed assertion result and dispatches debug handlers when
+     * enabled.
      *
      * @param <T>             result value type
      * @param messageSupplier supplies the failure message
      * @return failed assertion result
      */
-    @SuppressWarnings("unchecked") // Safe: KResult is final; type erasure makes KResult<T> indistinguishable from
+    @SuppressWarnings("unchecked") // Safe: KResult is final; type erasure makes
+                                   // KResult<T> indistinguishable from
                                    // KResult<Object> at runtime.
-    private static <T> KResult<T> failedResult(final Supplier<String> messageSupplier)
+    private static <T> KResult<T> failedResult(
+            final Supplier<String> messageSupplier)
     {
         final RuntimeException error = createAssertionError(messageSupplier);
         if (LOG_FAILURES)
         {
-            LOG.log(java.util.logging.Level.SEVERE, "Assertion failed: " + error.getMessage(), error);
+            LOG.log(java.util.logging.Level.SEVERE,
+                    "Assertion failed: " + error.getMessage(), error);
         }
         if (KAssertConfig.ENABLED)
         {
-            KFailureHandlerDispatcher.INSTANCE.dispatchDebugFailure(new KAssertionFailureContext(error));
+            KFailureHandlerDispatcher.INSTANCE
+                    .dispatchDebugFailure(new KAssertionFailureContext(error));
         }
         return err((Class<T>) Object.class, error);
     }
@@ -287,10 +339,16 @@ public final class KAssert
      * @param messageSupplier supplies the failure message
      * @return the exception to report
      */
-    private static IllegalStateException createAssertionError(final Supplier<String> messageSupplier)
+    private static IllegalStateException createAssertionError(
+            final Supplier<String> messageSupplier)
     {
-        final String message = (messageSupplier == null) ? null : messageSupplier.get();
-        if (message == null) return new IllegalStateException("Assertion failed (No context information provided)");
+        final String message = (messageSupplier == null) ? null
+                : messageSupplier.get();
+        if (message == null)
+        {
+            return new IllegalStateException(
+                    "Assertion failed (No context information provided)");
+        }
         return new IllegalStateException(message);
     }
 }
