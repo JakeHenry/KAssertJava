@@ -67,8 +67,9 @@ public final class KAssertConfigProcessor extends AbstractProcessor
         if (generated || roundEnv.processingOver())
             return false;
 
-        final boolean enabled = Boolean.parseBoolean(
-                getOptionOrDefault(OPTION_ENABLED, DEFAULT_ENABLED));
+        final String enabledOption = getOptionOrDefault(OPTION_ENABLED,
+                DEFAULT_ENABLED);
+        final boolean enabled = Boolean.parseBoolean(enabledOption);
         try
         {
             final JavaFileObject sourceFile = processingEnv.getFiler()
@@ -85,9 +86,10 @@ public final class KAssertConfigProcessor extends AbstractProcessor
         }
         catch (IOException error)
         {
+            final String msg = String.format("Failed to generate %s: %s",
+                    DEFAULT_CLASS_NAME, error.getMessage());
             processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
-                    "Failed to generate " + DEFAULT_CLASS_NAME + ": "
-                            + error.getMessage());
+                    msg);
         }
         return false;
     }
@@ -102,12 +104,18 @@ public final class KAssertConfigProcessor extends AbstractProcessor
     static void writeSource(final Writer writer, final boolean enabled)
             throws IOException
     {
-        final String source = String.format("package com.kassert;%n"
-                + "final class KAssertConfig%n" + "{%n"
-                + "    static final boolean ENABLED = %b;%n"
-                + "    private KAssertConfig()%n" + "    {%n"
-                + "        // prevent instantiation%n" + "    }%n" + "}%n",
-                enabled);
+        final String line1 = "package com.kassert;%n";
+        final String line2 = "final class KAssertConfig%n";
+        final String line3 = "{%n";
+        final String line4 = "    static final boolean ENABLED = %b;%n";
+        final String line5 = "    private KAssertConfig()%n";
+        final String line6 = "    {%n";
+        final String line7 = "        // prevent instantiation%n";
+        final String line8 = "    }%n";
+        final String line9 = "}%n";
+
+        final String source = String.format(line1 + line2 + line3 + line4
+                + line5 + line6 + line7 + line8 + line9, enabled);
         writer.write(source);
     }
 

@@ -65,8 +65,8 @@ public final class KPopupDialogFailureHandler
             defaultDialogTitle = "Message";
             break;
         default:
-            throw new IllegalArgumentException(
-                    "Invalid dialogType: " + dialogType);
+            final String msg = "Invalid dialogType: " + dialogType;
+            throw new IllegalArgumentException(msg);
         }
         this.dialogType = dialogType;
         this.dialogTitle = dialogTitle != null && !dialogTitle.isEmpty()
@@ -124,7 +124,8 @@ public final class KPopupDialogFailureHandler
             final JOptionPane optionPane = new JOptionPane(scrollPane,
                     dialogType, JOptionPane.DEFAULT_OPTION, null, options,
                     options[0]);
-            final JDialog dialog = optionPane.createDialog(null, dialogTitle);
+            final JDialog dialog;
+            dialog = optionPane.createDialog(null, dialogTitle);
             dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
             dialog.setSize(600, 400);
             dialog.setResizable(true);
@@ -169,8 +170,8 @@ public final class KPopupDialogFailureHandler
             }
             catch (Exception e)
             {
-                LOGGER.log(Level.SEVERE,
-                        "Failed to show assertion failure dialog.", e);
+                final String msg = "Failed to show assertion failure dialog.";
+                LOGGER.log(Level.SEVERE, msg, e);
             }
         }
     }
@@ -227,7 +228,9 @@ public final class KPopupDialogFailureHandler
      */
     private String formatTimestamp(final long timestampMillis)
     {
-        return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS z(Z)")
-                .format(new Date(timestampMillis));
+        final SimpleDateFormat tsFormat;
+        tsFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS z(Z)");
+        final Date date = new Date(timestampMillis);
+        return tsFormat.format(date);
     }
 }

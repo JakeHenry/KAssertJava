@@ -136,7 +136,7 @@ public class KAssertTest
                 invocationFlag.set(new Object());
                 handlerStartedLatch.countDown();
             };
-            KFailureHandlerDispatcher.INSTANCE
+            KFailureDispatcher.INSTANCE
                     .registerSupplementaryHandler(testHandler);
             try
             {
@@ -153,7 +153,7 @@ public class KAssertTest
         finally
         {
             KAssertConfig.setEnabledForTesting(originalEnabled);
-            KFailureHandlerDispatcher.INSTANCE.clearSupplementaryHandlers();
+            KFailureDispatcher.INSTANCE.clearSuppHandlers();
         }
     }
 
@@ -181,7 +181,7 @@ public class KAssertTest
                 invocationFlag.set(new Object());
                 handlerStartedLatch.countDown();
             };
-            KFailureHandlerDispatcher.INSTANCE
+            KFailureDispatcher.INSTANCE
                     .registerSupplementaryHandler(testHandler);
             try
             {
@@ -198,7 +198,7 @@ public class KAssertTest
         finally
         {
             KAssertConfig.setEnabledForTesting(originalEnabled);
-            KFailureHandlerDispatcher.INSTANCE.clearSupplementaryHandlers();
+            KFailureDispatcher.INSTANCE.clearSuppHandlers();
         }
     }
 

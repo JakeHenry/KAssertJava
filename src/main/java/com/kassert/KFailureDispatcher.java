@@ -15,25 +15,36 @@ import javax.swing.JOptionPane;
  * 
  * @author Jacob Henry
  */
-public final class KFailureHandlerDispatcher
+public final class KFailureDispatcher
 {
+
     /** Singleton instance of the dispatcher. */
-    public static final KFailureHandlerDispatcher INSTANCE = new KFailureHandlerDispatcher();
+    static final KFailureDispatcher INSTANCE = new KFailureDispatcher();
 
     /** Logger for this class. */
     private static final Logger LOGGER = Logger
-            .getLogger(KFailureHandlerDispatcher.class.getName());
+            .getLogger(KFailureDispatcher.class.getName());
+
+    /** Property for whether to crash the JVM on assertion failures. */
+    private static final String CRASH_ON_FAILURE_PROPERTY = System.getProperty(
+            "kassert.crashOnFailure",
+            java.awt.GraphicsEnvironment.isHeadless() ? "true" : "false");
 
     /** Whether to crash the JVM on assertion failures. */
     private static final boolean CRASH_ON_FAILURE = Boolean
-            .parseBoolean(System.getProperty("kassert.crashOnFailure",
-                    java.awt.GraphicsEnvironment.isHeadless() ? "true"
-                            : "false"));
+            .parseBoolean(CRASH_ON_FAILURE_PROPERTY);
+
+    /** Property for whether to disable the built-in popup handler. */
+    private static final String DISABLE_POPUP_HANDLER_PROPERTY = System
+            .getProperty("kassert.disablePopupHandler", "false");
 
     /** Whether to disable the built-in popup handler. */
-    private static final boolean DISABLE_POPUP_HANDLER = Boolean.parseBoolean(
-            System.getProperty("kassert.disablePopupHandler", "false"));
+    private static final boolean DISABLE_POPUP_HANDLER = Boolean
+            .parseBoolean(DISABLE_POPUP_HANDLER_PROPERTY);
 
+    /**
+     * Thread factory for running supplementary handlers in separate threads.
+     */
     private final ThreadFactory supplementaryHandlerThreadFactory = createDefaultThreadFactory();
 
     /** List of registered supplementary failure handlers. */
@@ -46,7 +57,7 @@ public final class KFailureHandlerDispatcher
      * Creates a new dispatcher with the default popup handler and an executor
      * for running supplementary handlers in separate threads.
      */
-    private KFailureHandlerDispatcher()
+    private KFailureDispatcher()
     {
         supplementaryHandlers = new ArrayList<KAssertionFailureHandler>();
         popupHandler = new KPopupDialogFailureHandler(JOptionPane.ERROR_MESSAGE,
@@ -84,19 +95,22 @@ public final class KFailureHandlerDispatcher
     {
         Objects.requireNonNull(context, "context must not be null");
 
-        final List<KAssertionFailureHandler> handlersToRun = getSupplementaryHandlersSnapshot();
-        final Thread[] supplementaryHandlerThreads = new Thread[handlersToRun
-                .size()];
+        final List<KAssertionFailureHandler> handlersToRun;
+        handlersToRun = getSuppHandlersSnapshot();
+        final Thread[] supplementaryHandlerThreads;
+        supplementaryHandlerThreads = new Thread[handlersToRun.size()];
         for (int i = 0, l = handlersToRun.size(); i < l; i++)
         {
-            supplementaryHandlerThreads[i] = scheduleSupplementaryHandler(
-                    handlersToRun.get(i), context);
+            final KAssertionFailureHandler handler;
+            handler = handlersToRun.get(i);
+            final Thread registeredHandler;
+            registeredHandler = scheduleSuppHandler(handler, context);
+            supplementaryHandlerThreads[i] = registeredHandler;
         }
 
         if (!DISABLE_POPUP_HANDLER)
         {
-            popupHandler.onFailure(context); // blocking until dialog is
-                                             // dismissed
+            popupHandler.onFailure(context); // blocking
         }
 
         if (CRASH_ON_FAILURE)
@@ -106,16 +120,16 @@ public final class KFailureHandlerDispatcher
                 final Thread thread = supplementaryHandlerThreads[i];
                 try
                 {
-                    thread.join(); // wait for each supplementary handler to
-                                   // finish
+                    thread.join(); // wait until done
                 }
                 catch (InterruptedException e)
                 {
+                    final String msg;
+                    msg = "Interrupted while waiting for supplementary handler"
+                            + " thread to finish: " + thread.getName();
+                    LOGGER.log(Level.WARNING, msg, e);
+
                     Thread.currentThread().interrupt();
-                    LOGGER.log(Level.WARNING,
-                            "Interrupted while waiting for supplementary handler thread to finish: "
-                                    + thread.getName(),
-                            e);
                 }
             }
             System.exit(1);
@@ -128,7 +142,7 @@ public final class KFailureHandlerDispatcher
      * @return a list of the registered supplementary handlers at the time of
      *         this call
      */
-    private synchronized List<KAssertionFailureHandler> getSupplementaryHandlersSnapshot()
+    private synchronized List<KAssertionFailureHandler> getSuppHandlersSnapshot()
     {
         return new ArrayList<KAssertionFailureHandler>(supplementaryHandlers);
     }
@@ -137,7 +151,7 @@ public final class KFailureHandlerDispatcher
      * Clears all registered supplementary handlers. This is primarily intended
      * for testing purposes.
      */
-    synchronized void clearSupplementaryHandlers()
+    synchronized void clearSuppHandlers()
     {
         supplementaryHandlers.clear();
     }
@@ -149,8 +163,7 @@ public final class KFailureHandlerDispatcher
      * @param handler the handler to schedule
      * @param context the context to pass to the handler when it runs
      */
-    private Thread scheduleSupplementaryHandler(
-            final KAssertionFailureHandler handler,
+    private Thread scheduleSuppHandler(final KAssertionFailureHandler handler,
             final KAssertionFailureContext context)
     {
         final Thread worker = supplementaryHandlerThreadFactory.newThread(() ->
@@ -161,10 +174,10 @@ public final class KFailureHandlerDispatcher
             }
             catch (Exception e)
             {
-                LOGGER.log(Level.SEVERE,
-                        "Exception thrown by supplementary failure handler: "
-                                + handler,
-                        e);
+                final String msg;
+                msg = "Exception thrown by supplementary failure handler: "
+                        + handler;
+                LOGGER.log(Level.SEVERE, msg, e);
             }
         });
         worker.start();
@@ -182,9 +195,9 @@ public final class KFailureHandlerDispatcher
         final AtomicInteger threadCounter = new AtomicInteger(1);
         return runnable ->
         {
-            final Thread worker = new Thread(runnable,
-                    "kassert-supplementary-handler-"
-                            + threadCounter.getAndIncrement());
+            final String tName = "kassert-supplementary-handler-"
+                    + threadCounter.getAndIncrement();
+            final Thread worker = new Thread(runnable, tName);
             worker.setDaemon(true);
             return worker;
         };

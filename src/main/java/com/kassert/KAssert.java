@@ -64,19 +64,26 @@ public final class KAssert
         assert assertionsEnabled = true; // Intentional side effect
         if (assertionsEnabled != ENABLED)
         {
-            final IllegalStateException configException = new IllegalStateException(
-                    String.format(
-                            "KAssert is misconfigured: assertionsEnabled=%b, KAssertConfig.ENABLED=%b. "
-                                    + "This may be due to missing annotation processing in the client build.",
-                            assertionsEnabled, ENABLED));
+            final String ceMsg = "KAssert is misconfigured:"
+                    + " assertionsEnabled=%b, KAssertConfig.ENABLED=%b. "
+                    + "This may be due to missing annotation processing in the"
+                    + " client build.";
+            final IllegalStateException configException;
+            configException = new IllegalStateException(
+                    String.format(ceMsg, assertionsEnabled, ENABLED));
             if (LOG_FAILURES)
-                LOG.log(Level.SEVERE, "KAssert misuse detected!",
-                        configException);
+            {
+                final String msg = "KAssert misuse detected!";
+                LOG.log(Level.SEVERE, msg, configException);
+            }
             if (!DISABLE_POPUP_HANDLER)
             {
-                final KPopupDialogFailureHandler kPopupDialogFailureHandler = new KPopupDialogFailureHandler(
-                        JOptionPane.WARNING_MESSAGE, "KAssert Misconfiguration",
-                        TimeUnit.SECONDS.toMillis(30));
+                final int dialogTimeoutMillis = 30_000;
+                final KPopupDialogFailureHandler kPopupDialogFailureHandler;
+                final String dialogTitle = "KAssert Misconfiguration";
+                kPopupDialogFailureHandler = new KPopupDialogFailureHandler(
+                        JOptionPane.WARNING_MESSAGE, dialogTitle,
+                        dialogTimeoutMillis);
                 kPopupDialogFailureHandler.onFailure(
                         new KAssertionFailureContext(configException));
             }
@@ -137,6 +144,7 @@ public final class KAssert
      * @return an Ok result containing {@code actual} when the values are equal,
      *         or an Err result otherwise
      */
+    @SuppressWarnings("unlikely-arg-type")
     public static <T, K> KResult<K> kRequireEquals(final T expected,
             final K actual, final Supplier<String> messageSupplier)
     {
@@ -157,6 +165,7 @@ public final class KAssert
      * @return an Ok result containing {@code actual} when the values are
      *         different, or an Err result otherwise
      */
+    @SuppressWarnings("unlikely-arg-type")
     public static <T, K> KResult<K> kRefuseEquals(final T refusedValue,
             final K actual, final Supplier<String> messageSupplier)
     {
@@ -300,8 +309,9 @@ public final class KAssert
     {
         if (KAssertConfig.ENABLED)
         {
-            KFailureHandlerDispatcher.INSTANCE
-                    .registerSupplementaryHandler(handler);
+            final KFailureDispatcher dispatcher;
+            dispatcher = KFailureDispatcher.INSTANCE;
+            dispatcher.registerSupplementaryHandler(handler);
         }
     }
 
@@ -322,13 +332,14 @@ public final class KAssert
         final RuntimeException error = createAssertionError(messageSupplier);
         if (LOG_FAILURES)
         {
-            LOG.log(java.util.logging.Level.SEVERE,
-                    "Assertion failed: " + error.getMessage(), error);
+            final String msg = "Assertion failed: " + error.getMessage();
+            LOG.log(Level.SEVERE, msg, error);
         }
         if (KAssertConfig.ENABLED)
         {
-            KFailureHandlerDispatcher.INSTANCE
-                    .dispatchDebugFailure(new KAssertionFailureContext(error));
+            final KAssertionFailureContext context;
+            context = new KAssertionFailureContext(error);
+            KFailureDispatcher.INSTANCE.dispatchDebugFailure(context);
         }
         return err((Class<T>) Object.class, error);
     }
@@ -344,11 +355,11 @@ public final class KAssert
     {
         final String message = (messageSupplier == null) ? null
                 : messageSupplier.get();
+        final String msg;
         if (message == null)
-        {
-            return new IllegalStateException(
-                    "Assertion failed (No context information provided)");
-        }
-        return new IllegalStateException(message);
+            msg = "Assertion failed (No context information provided)";
+        else
+            msg = message;
+        return new IllegalStateException(msg);
     }
 }
