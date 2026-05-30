@@ -178,44 +178,15 @@ public final class KResult<T>
     // -------------------------------------------------------------------------
 
     /**
-     * Returns the Ok value, or throws the Err exception if this result is Err.
+     * Returns the Ok value, or throws if this result is Err.
      *
      * @return the Ok value
      * @throws RuntimeException if this result is Err
      */
-    public T get()
+    public T expect()
     {
         if (err())
             throw error;
-        return value;
-    }
-
-    /**
-     * Returns the Err exception, or throws if this result is Ok.
-     *
-     * @return the Err exception
-     * @throws IllegalStateException if this result is Ok
-     */
-    public RuntimeException getErr()
-    {
-        return expectErr("called getErr() on an Ok value");
-    }
-
-    /**
-     * Returns the Ok value, or throws with {@code message} as the detail if
-     * this result is Err.
-     *
-     * @param message the detail message for the thrown exception; must not be
-     *                {@code null}
-     * @return the Ok value
-     * @throws IllegalStateException if this result is Err
-     * @throws NullPointerException  if {@code message} is {@code null}
-     */
-    public T expect(final String message)
-    {
-        Objects.requireNonNull(message, "expect() message must not be null");
-        if (err())
-            throw new IllegalStateException(message, error);
         return value;
     }
 

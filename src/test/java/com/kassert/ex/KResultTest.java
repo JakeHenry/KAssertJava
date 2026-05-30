@@ -35,16 +35,16 @@ public class KResultTest
         KResult<String> r = empty();
         at(r.ok());
         af(r.err());
-        an(r.get());
+        an(r.expect());
 
         // Type flexibility: empty can be assigned to any type parameter
         KResult<Integer> ri = empty();
         at(ri.ok());
-        an(ri.get());
+        an(ri.expect());
 
         KResult<Object> ro = empty();
         at(ro.ok());
-        an(ro.get());
+        an(ro.expect());
 
         // Two calls produce independent instances
         KResult<String> r1 = empty();
@@ -55,10 +55,10 @@ public class KResultTest
         KResult<? extends Integer> mapped = r.map(v -> 42);
         // v is null here so mapper receives null and returns 42
         at(mapped.ok());
-        aeq(Integer.valueOf(42), mapped.get());
+        aeq(Integer.valueOf(42), mapped.expect());
 
         // empty works with expect (returns null without throwing)
-        an(r.expect("should not throw"));
+        an(r.expect());
 
         // empty throws on expectErr
         try
@@ -82,40 +82,40 @@ public class KResultTest
         KResult<String> rs = ok("hello");
         at(rs.ok());
         af(rs.err());
-        aeq("hello", rs.get());
+        aeq("hello", rs.expect());
 
         // Integer value
         KResult<Integer> ri = ok(42);
         at(ri.ok());
-        aeq(Integer.valueOf(42), ri.get());
+        aeq(Integer.valueOf(42), ri.expect());
 
         // Object value
         Object obj = new Object();
         KResult<Object> ro = ok(obj);
-        as(obj, ro.get());
+        as(obj, ro.expect());
 
         // Empty string is a valid value
         KResult<String> empty = ok("");
         at(empty.ok());
-        aeq("", empty.get());
+        aeq("", empty.expect());
 
         // Zero is a valid value
         KResult<Integer> zero = ok(0);
         at(zero.ok());
-        aeq(Integer.valueOf(0), zero.get());
+        aeq(Integer.valueOf(0), zero.expect());
 
         // Negative value
         KResult<Integer> neg = ok(-1);
         at(neg.ok());
-        aeq(Integer.valueOf(-1), neg.get());
+        aeq(Integer.valueOf(-1), neg.expect());
 
         // Boolean value
         KResult<Boolean> bt = ok(Boolean.TRUE);
         at(bt.ok());
-        aeq(Boolean.TRUE, bt.get());
+        aeq(Boolean.TRUE, bt.expect());
         KResult<Boolean> bf = ok(Boolean.FALSE);
         at(bf.ok());
-        aeq(Boolean.FALSE, bf.get());
+        aeq(Boolean.FALSE, bf.expect());
 
         // Null argument throws NullPointerException
         try
@@ -133,13 +133,13 @@ public class KResultTest
         KResult<String> r1 = ok("same");
         KResult<String> r2 = ok("same");
         ans(r1, r2);
-        aeq(r1.get(), r2.get());
+        aeq(r1.expect(), r2.expect());
 
         // Subtype value: Integer stored as Number
         Number n = Integer.valueOf(7);
         @SuppressWarnings("unchecked")
         KResult<Number> rn = (KResult<Number>) (KResult<?>) ok(n);
-        aeq(Integer.valueOf(7), rn.get());
+        aeq(Integer.valueOf(7), rn.expect());
     }
 
     /**
@@ -158,7 +158,7 @@ public class KResultTest
         // get() throws the stored exception
         try
         {
-            r.get();
+            r.expect();
             fail("Expected RuntimeException");
         }
         catch (RuntimeException caught)
@@ -167,18 +167,18 @@ public class KResultTest
         }
 
         // getErr() returns the exception
-        as(ex, r.getErr());
+        as(ex, r.expectErr("Unexpected Ok"));
 
         // Various exception subtypes
         IllegalArgumentException iae = new IllegalArgumentException("bad arg");
         KResult<Integer> r2 = err(Integer.class, iae);
         at(r2.err());
-        as(iae, r2.getErr());
+        as(iae, r2.expectErr("Unexpected Ok"));
 
         IllegalStateException ise = new IllegalStateException("bad state");
         KResult<Object> r3 = err(Object.class, ise);
         at(r3.err());
-        as(ise, r3.getErr());
+        as(ise, r3.expectErr("Unexpected Ok"));
 
         // Null type throws
         try
@@ -374,21 +374,21 @@ public class KResultTest
      * Verifies {@link KResult#get()}.
      */
     @Test
-    public void testGet()
+    public void testExpect()
     {
         // Ok value returned
-        aeq("hello", ok("hello").get());
-        aeq(Integer.valueOf(42), ok(42).get());
+        aeq("hello", ok("hello").expect());
+        aeq(Integer.valueOf(42), ok(42).expect());
 
         // Empty returns null
-        an(empty().get());
+        an(empty().expect());
 
         // Err throws the exact stored exception
         RuntimeException ex = new RuntimeException("boom");
         KResult<String> errR = err(String.class, ex);
         try
         {
-            errR.get();
+            errR.expect();
             fail("Expected RuntimeException");
         }
         catch (RuntimeException caught)
@@ -402,131 +402,12 @@ public class KResultTest
         KResult<Integer> errIse = err(Integer.class, ise);
         try
         {
-            errIse.get();
+            errIse.expect();
             fail("Expected IllegalStateException");
         }
         catch (IllegalStateException caught)
         {
             as(ise, caught);
-        }
-    }
-
-    /**
-     * Verifies {@link KResult#getErr()}.
-     */
-    @Test
-    public void testGetErr()
-    {
-        // Err returns the exception
-        RuntimeException ex = new RuntimeException("error");
-        KResult<String> errR = err(String.class, ex);
-        as(ex, errR.getErr());
-
-        // Err with subtype
-        IllegalArgumentException iae = new IllegalArgumentException("arg");
-        KResult<Integer> errIae = err(Integer.class, iae);
-        RuntimeException returned = errIae.getErr();
-        as(iae, returned);
-        at(returned instanceof IllegalArgumentException);
-
-        // Ok throws IllegalStateException
-        KResult<String> okR = ok("value");
-        try
-        {
-            okR.getErr();
-            fail("Expected IllegalStateException");
-        }
-        catch (IllegalStateException e)
-        {
-            at(e.getMessage().contains("getErr()"));
-            at(e.getMessage().contains("Ok"));
-            at(e.getMessage().contains("value"));
-        }
-
-        // Empty throws IllegalStateException
-        KResult<Object> emptyR = empty();
-        try
-        {
-            emptyR.getErr();
-            fail("Expected IllegalStateException");
-        }
-        catch (IllegalStateException e)
-        {
-            at(e.getMessage().contains("getErr()"));
-        }
-    }
-
-    /**
-     * Verifies {@link KResult#expect(String)}.
-     */
-    @Test
-    public void testExpect()
-    {
-        // Ok returns value
-        aeq("hello", ok("hello").expect("should not throw"));
-        aeq(Integer.valueOf(99), ok(99).expect("should not throw"));
-
-        // Empty returns null
-        an(empty().expect("should not throw"));
-
-        // Err throws IllegalStateException with the provided message as detail
-        RuntimeException original = new RuntimeException("original");
-        KResult<String> errR = err(String.class, original);
-        try
-        {
-            errR.expect("custom message");
-            fail("Expected IllegalStateException");
-        }
-        catch (IllegalStateException e)
-        {
-            aeq("custom message", e.getMessage());
-            as(original, e.getCause());
-        }
-
-        // Err with different message
-        try
-        {
-            errR.expect("another message");
-            fail("Expected IllegalStateException");
-        }
-        catch (IllegalStateException e)
-        {
-            aeq("another message", e.getMessage());
-            as(original, e.getCause());
-        }
-
-        // Null message throws NullPointerException
-        try
-        {
-            ok("x").expect(null);
-            fail("Expected NullPointerException");
-        }
-        catch (NullPointerException e)
-        {
-            at(e.getMessage().contains("expect()"));
-        }
-
-        // Null message on err also throws NullPointerException (null check
-        // first)
-        try
-        {
-            errR.expect(null);
-            fail("Expected NullPointerException");
-        }
-        catch (NullPointerException e)
-        {
-            at(e.getMessage().contains("expect()"));
-        }
-
-        // Empty string message is valid
-        try
-        {
-            errR.expect("");
-            fail("Expected IllegalStateException");
-        }
-        catch (IllegalStateException e)
-        {
-            aeq("", e.getMessage());
         }
     }
 
@@ -742,26 +623,26 @@ public class KResultTest
         // Ok: mapper transforms the value
         KResult<? extends Integer> mapped = okR.map(String::length);
         at(mapped.ok());
-        aeq(Integer.valueOf(5), mapped.get());
+        aeq(Integer.valueOf(5), mapped.expect());
 
         // Ok: mapper to different type
         KResult<? extends Boolean> boolMapped = okR.map(s -> s.startsWith("h"));
         at(boolMapped.ok());
-        aeq(Boolean.TRUE, boolMapped.get());
+        aeq(Boolean.TRUE, boolMapped.expect());
 
         // Ok: mapper returns null -> produces empty Ok
         KResult<? extends Integer> nullMapped = okR.map(s -> null);
         at(nullMapped.ok());
-        an(nullMapped.get());
+        an(nullMapped.expect());
 
         // Ok: identity-like mapping
         KResult<? extends String> identity = okR.map(s -> s);
         at(identity.ok());
-        aeq("hello", identity.get());
+        aeq("hello", identity.expect());
 
         // Ok: mapper to same type but different value
         KResult<? extends String> upper = okR.map(String::toUpperCase);
-        aeq("HELLO", upper.get());
+        aeq("HELLO", upper.expect());
 
         // Err: mapper is NOT called, err propagates
         KResult<? extends Integer> errMapped = errR.map(s ->
@@ -770,18 +651,18 @@ public class KResultTest
             return 42;
         });
         at(errMapped.err());
-        as(ex, errMapped.getErr());
+        as(ex, errMapped.expectErr("Unexpected Ok"));
 
         // Empty: mapper receives null
         KResult<? extends String> emptyMapped = emptyR.map(v -> "was null");
         at(emptyMapped.ok());
-        aeq("was null", emptyMapped.get());
+        aeq("was null", emptyMapped.expect());
 
         // Chained maps
         KResult<? extends Integer> chained = okR.map(String::length)
                 .map(n -> n * 2);
         at(chained.ok());
-        aeq(Integer.valueOf(10), chained.get());
+        aeq(Integer.valueOf(10), chained.expect());
 
         // Null mapper on err still throws (null check first)
         try
@@ -837,7 +718,7 @@ public class KResultTest
         // Err: mapper transforms the error
         KResult<String> errMapped = errR.mapErr(e -> replacement);
         at(errMapped.err());
-        as(replacement, errMapped.getErr());
+        as(replacement, errMapped.expectErr("Unexpected Ok"));
 
         // Err: mapper receives the original exception
         AtomicReference<RuntimeException> captured = new AtomicReference<>();
@@ -852,8 +733,8 @@ public class KResultTest
         KResult<String> wrapped = errR
                 .mapErr(e -> new IllegalStateException("wrapped", e));
         at(wrapped.err());
-        aeq("wrapped", wrapped.getErr().getMessage());
-        as(original, wrapped.getErr().getCause());
+        aeq("wrapped", wrapped.expectErr("Unexpected Ok").getMessage());
+        as(original, wrapped.expectErr("Unexpected Ok").getCause());
 
         // Err: mapper that returns null throws NullPointerException
         try
@@ -1033,31 +914,31 @@ public class KResultTest
         // Ok.and(Ok) returns the other
         KResult<Integer> result = okStr.and(okInt);
         at(result.ok());
-        aeq(Integer.valueOf(42), result.get());
+        aeq(Integer.valueOf(42), result.expect());
 
         // Ok.and(Err) returns Err
         RuntimeException otherEx = new RuntimeException("other");
         KResult<Integer> errInt = err(Integer.class, otherEx);
         KResult<Integer> result2 = okStr.and(errInt);
         at(result2.err());
-        as(otherEx, result2.getErr());
+        as(otherEx, result2.expectErr("Unexpected Ok"));
 
         // Err.and(Ok) returns the original Err
         KResult<Integer> result3 = errStr.and(okInt2);
         at(result3.err());
-        as(ex, result3.getErr());
+        as(ex, result3.expectErr("Unexpected Ok"));
 
         // Err.and(Err) returns the first Err
         RuntimeException ex2 = new RuntimeException("second");
         KResult<Integer> errInt2 = err(Integer.class, ex2);
         KResult<Integer> result4 = errStr.and(errInt2);
         at(result4.err());
-        as(ex, result4.getErr());
+        as(ex, result4.expectErr("Unexpected Ok"));
 
         // Empty.and(Ok) returns the other
         KResult<Integer> result5 = emptyR.and(okInt);
         at(result5.ok());
-        aeq(Integer.valueOf(42), result5.get());
+        aeq(Integer.valueOf(42), result5.expect());
 
         // Null argument throws
         try
@@ -1085,7 +966,7 @@ public class KResultTest
         KResult<Boolean> okBool = ok(true);
         KResult<Boolean> andBool = okStr.and(okBool);
         at(andBool.ok());
-        aeq(Boolean.TRUE, andBool.get());
+        aeq(Boolean.TRUE, andBool.expect());
     }
 
     /**
@@ -1102,19 +983,19 @@ public class KResultTest
         // Ok: function is called with value, returns Ok
         KResult<? extends Integer> result = okStr.andThen(s -> ok(s.length()));
         at(result.ok());
-        aeq(Integer.valueOf(5), result.get());
+        aeq(Integer.valueOf(5), result.expect());
 
         // Ok: function returns Err
         RuntimeException fnErr = new RuntimeException("fn error");
         KResult<? extends Integer> result2 = okStr
                 .andThen(s -> err(Integer.class, fnErr));
         at(result2.err());
-        as(fnErr, result2.getErr());
+        as(fnErr, result2.expectErr("Unexpected Ok"));
 
         // Ok: function returns empty
         KResult<? extends Integer> result3 = okStr.andThen(s -> empty());
         at(result3.ok());
-        an(result3.get());
+        an(result3.expect());
 
         // Err: function not called, error propagated
         KResult<? extends Integer> result4 = errStr.andThen(s ->
@@ -1123,13 +1004,13 @@ public class KResultTest
             return ok(0);
         });
         at(result4.err());
-        as(ex, result4.getErr());
+        as(ex, result4.expectErr("Unexpected Ok"));
 
         // Empty: function receives null
         KResult<? extends String> result5 = emptyR
                 .andThen(v -> ok("from null: " + v));
         at(result5.ok());
-        aeq("from null: null", result5.get());
+        aeq("from null: null", result5.expect());
 
         // Function returns null -> throws NullPointerException
         try
@@ -1168,7 +1049,7 @@ public class KResultTest
         KResult<? extends Integer> chained = okStr.andThen(s -> ok(s.length()))
                 .andThen(n -> ok(n * 2));
         at(chained.ok());
-        aeq(Integer.valueOf(10), chained.get());
+        aeq(Integer.valueOf(10), chained.expect());
 
         // Chaining: early err short-circuits
         AtomicBoolean secondCalled = new AtomicBoolean(false);
@@ -1197,13 +1078,13 @@ public class KResultTest
         // Ok.or(other) returns this (Ok)
         KResult<? extends String> result = okStr.or(fallback);
         at(result.ok());
-        aeq("hello", result.get());
+        aeq("hello", result.expect());
         as(okStr, result);
 
         // Err.or(Ok) returns the fallback
         KResult<? extends String> result2 = errStr.or(fallback);
         at(result2.ok());
-        aeq("fallback", result2.get());
+        aeq("fallback", result2.expect());
         as(fallback, result2);
 
         // Err.or(Err) returns the other Err
@@ -1211,7 +1092,7 @@ public class KResultTest
         KResult<String> errFallback = err(String.class, ex2);
         KResult<? extends String> result3 = errStr.or(errFallback);
         at(result3.err());
-        as(ex2, result3.getErr());
+        as(ex2, result3.expectErr("Unexpected Ok"));
 
         // Empty.or(other) returns this (empty is Ok)
         KResult<? extends String> result4 = emptyR.or(fallback);
@@ -1272,19 +1153,19 @@ public class KResultTest
         as(ex, captured.get());
         as(recovery, result3);
         at(result3.ok());
-        aeq("recovered", result3.get());
+        aeq("recovered", result3.expect());
 
         // Err: function returns another Err
         RuntimeException newEx = new RuntimeException("new error");
         KResult<String> newErr = err(String.class, newEx);
         KResult<? extends String> result4 = errStr.orElse(e -> newErr);
         at(result4.err());
-        as(newEx, result4.getErr());
+        as(newEx, result4.expectErr("Unexpected Ok"));
 
         // Err: function returns empty
         KResult<? extends String> result5 = errStr.orElse(e -> empty());
         at(result5.ok());
-        an(result5.get());
+        an(result5.expect());
 
         // Function returns null -> throws NullPointerException
         try
@@ -1322,7 +1203,7 @@ public class KResultTest
         // Chaining: first err recovered
         KResult<? extends String> chained = errStr.orElse(e -> ok("recovered"));
         at(chained.ok());
-        aeq("recovered", chained.get());
+        aeq("recovered", chained.expect());
     }
 
     /**

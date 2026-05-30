@@ -323,9 +323,7 @@ public final class KAssert
      * @param messageSupplier supplies the failure message
      * @return failed assertion result
      */
-    @SuppressWarnings("unchecked") // Safe: KResult is final; type erasure makes
-                                   // KResult<T> indistinguishable from
-                                   // KResult<Object> at runtime.
+    @SuppressWarnings("unchecked")
     private static <T> KResult<T> failedResult(
             final Supplier<String> messageSupplier)
     {
