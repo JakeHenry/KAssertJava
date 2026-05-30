@@ -25,10 +25,9 @@ import org.junit.Test;
  */
 public class KResultTest
 {
-    // =========================================================================
-    // Factory: empty()
-    // =========================================================================
-
+    /**
+     * Verifies {@link KResult#empty()}.
+     */
     @Test
     public void testEmpty()
     {
@@ -73,10 +72,9 @@ public class KResultTest
         }
     }
 
-    // =========================================================================
-    // Factory: ok(T)
-    // =========================================================================
-
+    /**
+     * Verifies {@link KResult#ok(Object)}.
+     */
     @Test
     public void testOk()
     {
@@ -144,10 +142,9 @@ public class KResultTest
         aeq(Integer.valueOf(7), rn.get());
     }
 
-    // =========================================================================
-    // Factory: err(Class<T>, RuntimeException)
-    // =========================================================================
-
+    /**
+     * Verifies {@link KResult#err(Class, RuntimeException)}.
+     */
     @Test
     public void testErr()
     {
@@ -222,10 +219,9 @@ public class KResultTest
         ans(e1, e2);
     }
 
-    // =========================================================================
-    // State query: ok()
-    // =========================================================================
-
+    /**
+     * Verifies {@link KResult#ok()}.
+     */
     @Test
     public void testOkQuery()
     {
@@ -239,10 +235,9 @@ public class KResultTest
         af(err(Integer.class, new IllegalArgumentException()).ok());
     }
 
-    // =========================================================================
-    // State query: err()
-    // =========================================================================
-
+    /**
+     * Verifies {@link KResult#err()}.
+     */
     @Test
     public void testErrQuery()
     {
@@ -256,10 +251,9 @@ public class KResultTest
         af(empty().err());
     }
 
-    // =========================================================================
-    // State query: isOkAnd(Predicate)
-    // =========================================================================
-
+    /**
+     * Verifies {@link KResult#isOkAnd(java.util.function.Predicate)}.
+     */
     @Test
     public void testIsOkAnd()
     {
@@ -319,10 +313,9 @@ public class KResultTest
         }
     }
 
-    // =========================================================================
-    // State query: isErrAnd(Predicate)
-    // =========================================================================
-
+    /**
+     * Verifies {@link KResult#isErrAnd(java.util.function.Predicate)}.
+     */
     @Test
     public void testIsErrAnd()
     {
@@ -377,10 +370,9 @@ public class KResultTest
         }
     }
 
-    // =========================================================================
-    // Extraction: get()
-    // =========================================================================
-
+    /**
+     * Verifies {@link KResult#get()}.
+     */
     @Test
     public void testGet()
     {
@@ -419,10 +411,9 @@ public class KResultTest
         }
     }
 
-    // =========================================================================
-    // Extraction: getErr()
-    // =========================================================================
-
+    /**
+     * Verifies {@link KResult#getErr()}.
+     */
     @Test
     public void testGetErr()
     {
@@ -465,10 +456,9 @@ public class KResultTest
         }
     }
 
-    // =========================================================================
-    // Extraction: expect(String)
-    // =========================================================================
-
+    /**
+     * Verifies {@link KResult#expect(String)}.
+     */
     @Test
     public void testExpect()
     {
@@ -539,10 +529,9 @@ public class KResultTest
         }
     }
 
-    // =========================================================================
-    // Extraction: expectErr(String)
-    // =========================================================================
-
+    /**
+     * Verifies {@link KResult#expectErr(String)}.
+     */
     @Test
     public void testExpectErr()
     {
@@ -625,10 +614,9 @@ public class KResultTest
         }
     }
 
-    // =========================================================================
-    // Extraction: getOr(T)
-    // =========================================================================
-
+    /**
+     * Verifies {@link KResult#getOr(Object)}.
+     */
     @Test
     public void testGetOr()
     {
@@ -656,10 +644,9 @@ public class KResultTest
         aeq(Integer.valueOf(Integer.MAX_VALUE), errI.getOr(Integer.MAX_VALUE));
     }
 
-    // =========================================================================
-    // Extraction: getOrElse(Function)
-    // =========================================================================
-
+    /**
+     * Verifies {@link KResult#getOrElse(java.util.function.Function)}.
+     */
     @Test
     public void testGetOrElse()
     {
@@ -728,10 +715,9 @@ public class KResultTest
         }
     }
 
-    // =========================================================================
-    // Transformation: map(Function)
-    // =========================================================================
-
+    /**
+     * Verifies {@link KResult#map(java.util.function.Function)}.
+     */
     @Test
     public void testMap()
     {
@@ -806,10 +792,9 @@ public class KResultTest
         }
     }
 
-    // =========================================================================
-    // Transformation: mapErr(Function)
-    // =========================================================================
-
+    /**
+     * Verifies {@link KResult#mapErr(java.util.function.Function)}.
+     */
     @Test
     public void testMapErr()
     {
@@ -892,10 +877,9 @@ public class KResultTest
         }
     }
 
-    // =========================================================================
-    // Transformation: mapOr(Function, U)
-    // =========================================================================
-
+    /**
+     * Verifies {@link KResult#mapOr(java.util.function.Function, Object)}.
+     */
     @Test
     public void testMapOr()
     {
@@ -948,10 +932,9 @@ public class KResultTest
         }
     }
 
-    // =========================================================================
-    // Transformation: mapOrElse(Function, Function)
-    // =========================================================================
-
+    /**
+     * Verifies {@link KResult#mapOrElse(java.util.function.Function, java.util.function.Function)}.
+     */
     @Test
     public void testMapOrElse()
     {
@@ -1029,10 +1012,9 @@ public class KResultTest
         af(boolErr);
     }
 
-    // =========================================================================
-    // AND chaining: and(KResult)
-    // =========================================================================
-
+    /**
+     * Verifies {@link KResult#and(KResult)}.
+     */
     @Test
     public void testAnd()
     {
@@ -1101,10 +1083,9 @@ public class KResultTest
         aeq(Boolean.TRUE, andBool.get());
     }
 
-    // =========================================================================
-    // AND chaining: andThen(Function)
-    // =========================================================================
-
+    /**
+     * Verifies {@link KResult#andThen(java.util.function.Function)}.
+     */
     @Test
     public void testAndThen()
     {
@@ -1192,10 +1173,9 @@ public class KResultTest
         af(secondCalled.get());
     }
 
-    // =========================================================================
-    // OR chaining: or(KResult)
-    // =========================================================================
-
+    /**
+     * Verifies {@link KResult#or(KResult)}.
+     */
     @Test
     public void testOr()
     {
@@ -1229,7 +1209,7 @@ public class KResultTest
         at(result4.ok());
         as(emptyR, result4);
 
-        // Null argument throws (via orElse delegation)
+        // Err path rejects a null fallback.
         try
         {
             errStr.or(null);
@@ -1240,22 +1220,14 @@ public class KResultTest
             ann(e.getMessage());
         }
 
-        // Null argument on ok: or() delegates to orElse; the fn creates
-        // a lambda returning null, but since ok() path returns early, no error
-        // Actually: or(null) creates fn = e -> null. On Ok path, fn is never called.
-        // But Objects.requireNonNull(fn) in orElse checks the fn itself, not the
-        // result.
-        // Let me trace: or(other) calls orElse(e -> other). If other is null,
-        // the lambda is valid (non-null), so the fn null check passes.
-        // On Ok path, returns this immediately. So ok.or(null) should work.
+        // Ok path returns this even when the fallback reference is null.
         KResult<? extends String> okOrNull = okStr.or(null);
         as(okStr, okOrNull);
     }
 
-    // =========================================================================
-    // OR chaining: orElse(Function)
-    // =========================================================================
-
+    /**
+     * Verifies {@link KResult#orElse(java.util.function.Function)}.
+     */
     @Test
     public void testOrElse()
     {
@@ -1344,10 +1316,9 @@ public class KResultTest
         aeq("recovered", chained.get());
     }
 
-    // =========================================================================
-    // Side-effect: inspect(Consumer)
-    // =========================================================================
-
+    /**
+     * Verifies {@link KResult#inspect(java.util.function.Consumer)}.
+     */
     @Test
     public void testInspect()
     {
@@ -1416,10 +1387,9 @@ public class KResultTest
         at(called.get());
     }
 
-    // =========================================================================
-    // Side-effect: inspectErr(Consumer)
-    // =========================================================================
-
+    /**
+     * Verifies {@link KResult#inspectErr(java.util.function.Consumer)}.
+     */
     @Test
     public void testInspectErr()
     {
@@ -1494,7 +1464,7 @@ public class KResultTest
 
     /**
      * assertTrue
-     * 
+     *
      * @param c condition to assert
      */
     private static void at(boolean c)
@@ -1504,7 +1474,7 @@ public class KResultTest
 
     /**
      * assertFalse
-     * 
+     *
      * @param c condition to assert
      */
     private static void af(boolean c)
@@ -1514,7 +1484,7 @@ public class KResultTest
 
     /**
      * assertNull
-     * 
+     *
      * @param o object to assert
      */
     private static void an(Object o)
@@ -1524,7 +1494,7 @@ public class KResultTest
 
     /**
      * assertNotNull
-     * 
+     *
      * @param o object to assert
      */
     private static void ann(Object o)
@@ -1534,7 +1504,7 @@ public class KResultTest
 
     /**
      * assertSame
-     * 
+     *
      * @param expected expected object
      * @param actual   actual object
      */
@@ -1545,7 +1515,7 @@ public class KResultTest
 
     /**
      * assertNotSame
-     * 
+     *
      * @param expected expected object
      * @param actual   actual object
      */
@@ -1556,7 +1526,7 @@ public class KResultTest
 
     /**
      * assertEquals
-     * 
+     *
      * @param expected expected object
      * @param actual   actual object
      */
@@ -1567,7 +1537,7 @@ public class KResultTest
 
     /**
      * assertNotEquals
-     * 
+     *
      * @param expected expected object
      * @param actual   actual object
      */
