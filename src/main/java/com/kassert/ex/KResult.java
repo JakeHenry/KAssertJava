@@ -21,7 +21,7 @@ import java.util.function.Predicate;
  * <p>
  * Create instances with {@link #ok(Object)} and
  * {@link #err(Class, RuntimeException)}. Query the variant with {@link #ok()} /
- * {@link #err()}, extract values with {@link #get()} / {@link #getOr(Object)},
+ * {@link #err()}, extract values with {@link #expect()} / {@link #getOr(Object)},
  * and chain operations with {@link #map(Function)}, {@link #andThen(Function)},
  * etc.
  *
@@ -87,10 +87,7 @@ public final class KResult<T>
      * @return an Ok {@code KResult}
      * @throws NullPointerException if {@code value} is {@code null}
      */
-    @SuppressWarnings("unchecked") // Safe: value.getClass() returns Class<?
-                                   // extends T>, which can be safely cast
-                                   // to Class<T> for the purpose of type
-                                   // inference in err() factory method.
+    @SuppressWarnings("unchecked")
     public static <T> KResult<T> ok(final T value)
     {
         Objects.requireNonNull(value, "Ok value must not be null");

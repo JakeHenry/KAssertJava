@@ -9,7 +9,7 @@ For zero-overhead elimination in client builds, guard calls with `KAssert.ENABLE
 
 ```java
 if (KAssert.ENABLED) {
-    KAssert.kRequire(expensiveCheck(), () -> "condition must hold").get();
+    KAssert.kRequire(expensiveCheck(), () -> "condition must hold").expect();
 }
 ```
 
@@ -94,8 +94,7 @@ Result type returned by the assertion helpers.
 Core operations:
 
 - `ok()`, `err()`
-- `get()`, `getErr()`
-- `expect(String)`, `expectErr(String)`
+- `expect()`, `expectErr(String)`
 - `getOr(T)`, `getOrElse(Function<RuntimeException, T>)`
 - `map(...)`, `mapErr(...)`
 - `mapOr(...)`, `mapOrElse(...)`
