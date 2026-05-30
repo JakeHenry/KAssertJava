@@ -1,5 +1,9 @@
 package com.kassert;
 
+import static com.kassert.ex.KResult.empty;
+import static com.kassert.ex.KResult.err;
+import static com.kassert.ex.KResult.ok;
+
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -7,9 +11,7 @@ import java.util.logging.Level;
 
 import javax.swing.JOptionPane;
 
-import com.kassert.ex.KFailed;
 import com.kassert.ex.KResult;
-import com.kassert.ex.KSuccess;
 
 /**
  * Facade entry point for KAssert require operations.
@@ -27,7 +29,7 @@ import com.kassert.ex.KSuccess;
  * <pre>{@code
  * if (com.kassert.KAssertConfig.ENABLED)
  * {
- *     KAssert.kRequire(condition, () -> "message").throwIfFailed();
+ *     KAssert.kRequire(condition, () -> "message").unwrap();
  * }
  * }</pre>
  *
@@ -67,7 +69,7 @@ public final class KAssert
         }
     }
 
-    /**k
+    /**
      * Prevents instantiation of this utility class.
      */
     private KAssert()
@@ -84,8 +86,8 @@ public final class KAssert
      */
     public static KResult<Boolean> kRequire(final boolean condition, final Supplier<String> messageSupplier)
     {
-        if (!condition) return failedResult(Boolean.valueOf(condition), messageSupplier);
-        return new KSuccess<Boolean>(Boolean.valueOf(condition));
+        if (!condition) return failedResult(messageSupplier);
+        return ok(Boolean.valueOf(condition));
     }
 
     /**
@@ -97,8 +99,8 @@ public final class KAssert
      */
     public static KResult<Boolean> kRefuse(final boolean condition, final Supplier<String> messageSupplier)
     {
-        if (condition) return failedResult(Boolean.valueOf(!condition), messageSupplier);
-        return new KSuccess<Boolean>(Boolean.valueOf(!condition));
+        if (condition) return failedResult(messageSupplier);
+        return ok(Boolean.valueOf(!condition));
     }
 
     /**
@@ -113,8 +115,8 @@ public final class KAssert
     public static <T, K> KResult<K> kRequireEquals(final T expected, final K actual,
             final Supplier<String> messageSupplier)
     {
-        if (!Objects.equals(expected, actual)) return failedResult(actual, messageSupplier);
-        return new KSuccess<K>(actual);
+        if (!Objects.equals(expected, actual)) return failedResult(messageSupplier);
+        return actual == null ? empty() : ok(actual);
     }
 
     /**
@@ -129,8 +131,8 @@ public final class KAssert
     public static <T, K> KResult<K> kRefuseEquals(final T refusedValue, final K actual,
             final Supplier<String> messageSupplier)
     {
-        if (Objects.equals(refusedValue, actual)) return failedResult(actual, messageSupplier);
-        return new KSuccess<K>(actual);
+        if (Objects.equals(refusedValue, actual)) return failedResult(messageSupplier);
+        return actual == null ? empty() : ok(actual);
     }
 
     /**
@@ -145,8 +147,8 @@ public final class KAssert
     public static <T, K> KResult<K> kRequireSame(final T expected, final K actual,
             final Supplier<String> messageSupplier)
     {
-        if (expected != actual) return failedResult(actual, messageSupplier);
-        return new KSuccess<K>(actual);
+        if (expected != actual) return failedResult(messageSupplier);
+        return actual == null ? empty() : ok(actual);
     }
 
     /**
@@ -162,8 +164,8 @@ public final class KAssert
     public static <T, K> KResult<K> kRefuseSame(final T refusedReference, final K actual,
             final Supplier<String> messageSupplier)
     {
-        if (refusedReference == actual) return failedResult(actual, messageSupplier);
-        return new KSuccess<K>(actual);
+        if (refusedReference == actual) return failedResult(messageSupplier);
+        return actual == null ? empty() : ok(actual);
     }
 
     /**
@@ -176,8 +178,8 @@ public final class KAssert
      */
     public static <T> KResult<T> kRequireNull(final T object, final Supplier<String> messageSupplier)
     {
-        if (object != null) return failedResult(object, messageSupplier);
-        return new KSuccess<T>(object);
+        if (object != null) return failedResult(messageSupplier);
+        return empty();
     }
 
     /**
@@ -190,8 +192,8 @@ public final class KAssert
      */
     public static <T> KResult<T> kRefuseNull(final T value, final Supplier<String> messageSupplier)
     {
-        if (value == null) return failedResult(value, messageSupplier);
-        return new KSuccess<T>(value);
+        if (value == null) return failedResult(messageSupplier);
+        return ok(value);
     }
 
     /**
@@ -206,9 +208,9 @@ public final class KAssert
     public static <T> KResult<T> kRequireInstanceOf(final Class<?> expectedType, final T object,
             final Supplier<String> messageSupplier)
     {
-        if (expectedType == null) return failedResult(object, () -> "expectedType must not be null");
-        if (!expectedType.isInstance(object)) return failedResult(object, messageSupplier);
-        return new KSuccess<T>(object);
+        if (expectedType == null) return failedResult(() -> "expectedType must not be null");
+        if (!expectedType.isInstance(object)) return failedResult(messageSupplier);
+        return ok(object);
     }
 
     /**
@@ -223,9 +225,9 @@ public final class KAssert
     public static <T> KResult<T> kRefuseInstanceOf(final Class<?> refusedType, final T object,
             final Supplier<String> messageSupplier)
     {
-        if (refusedType == null) return failedResult(object, () -> "refusedType must not be null");
-        if (refusedType.isInstance(object)) return failedResult(object, messageSupplier);
-        return new KSuccess<T>(object);
+        if (refusedType == null) return failedResult(() -> "refusedType must not be null");
+        if (refusedType.isInstance(object)) return failedResult(messageSupplier);
+        return ok(object);
     }
 
     /**
@@ -245,11 +247,12 @@ public final class KAssert
      * Creates a failed assertion result and dispatches debug handlers when enabled.
      *
      * @param <T>             result value type
-     * @param value           value associated with the failed result
      * @param messageSupplier supplies the failure message
      * @return failed assertion result
      */
-    private static <T> KResult<T> failedResult(final T value, final Supplier<String> messageSupplier)
+    @SuppressWarnings("unchecked") // Safe: KResult is final; type erasure makes KResult<T> indistinguishable from
+                                   // KResult<Object> at runtime.
+    private static <T> KResult<T> failedResult(final Supplier<String> messageSupplier)
     {
         final RuntimeException error = createAssertionError(messageSupplier);
         if (LOG_FAILURES)
@@ -260,7 +263,7 @@ public final class KAssert
         {
             KFailureHandlerDispatcher.INSTANCE.dispatchDebugFailure(new KAssertionFailureContext(error));
         }
-        return new KFailed<T>(value, error);
+        return err((Class<T>) Object.class, error);
     }
 
     /**
